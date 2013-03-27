@@ -1,1 +1,24 @@
-muhahahahhaahah
+1. Multitouch/Controller support (Keyboard optional).
+
+
+2. Proper Gameplay/Pause/Resume lifecycle - onPause()/onResume()/
+onFocusChanged(false)
+
+http://android-developers.blogspot.co.uk/2011/11/
+making-android-games-that-play-nice.html
+
+
+3. Implement Audio according to the lifecycle.
+
+
+
+4. UI+search intent.
+
+
+
+5. Procedurally generated terrain.
+
+
+6. OBJ to MD5 character from http://www.mixamo.com/ through Blender.
+
+7. Compelete Documentation AND proper comments inside the code.
