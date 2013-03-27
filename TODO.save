@@ -1,0 +1,6 @@
+1.Multitouch/Controller support (Keyboard optional)
+
+
+
+2. Proper Gameplay/Pause/Resume modes- onPause/onResume+FocusChanged
+http://android-developers.blogspot.co.uk/2011/11/making-android-games-that-play-nice.html
