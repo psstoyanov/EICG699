@@ -1,6 +1,6 @@
 /*
 
-Book:        Game and Graphics Programming for iOS and Android with OpenGL(R) ES 2.0
+Book:      	Game and Graphics Programming for iOS and Android with OpenGL(R) ES 2.0
 Author:    	Romain Marucchi-Foino
 ISBN-10: 	1119975913
 ISBN-13: 	978-1119975915

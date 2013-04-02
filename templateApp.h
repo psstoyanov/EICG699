@@ -1,6 +1,6 @@
 /*
 
-Book:        Game and Graphics Programming for iOS and Android with OpenGL(R) ES 2.0
+Book:      	Game and Graphics Programming for iOS and Android with OpenGL(R) ES 2.0
 Author:    	Romain Marucchi-Foino
 ISBN-10: 	1119975913
 ISBN-13: 	978-1119975915
@@ -44,6 +44,7 @@ void ( *Init			)( int width, int height );
 void ( *Draw			)( void );
 void ( *ToucheBegan	    )( float x, float y, unsigned int tap_count );
 void ( *ToucheMoved	    )( float x, float y, unsigned int tap_count );
+void ( *ToucheMoved2    )( float x, float y, unsigned int tap_count, unsigned int id );
 void ( *ToucheEnded	    )( float x, float y, unsigned int tap_count );
 void ( *Accelerometer   )( float x, float y, float z );
 
@@ -55,11 +56,25 @@ void templateAppInit( int width, int height );
 
 void templateAppDraw( void );
 
+//The following code is used for gluing the Dalvik-Java and C/C++
+//commands commands together.
+
 void templateAppToucheBegan( float x, float y, unsigned int tap_count );
+
+//void templateAppToucheBegan2( float x, float y, unsigned int tap_count, unsigned int id );
+
+
 
 void templateAppToucheMoved( float x, float y, unsigned int tap_count );
 
+void templateAppToucheMoved2( float x, float y, unsigned int tap_count, unsigned int id );
+
+
+
 void templateAppToucheEnded( float x, float y, unsigned int tap_count );
+
+//void templateAppToucheEnded2( float x, float y, unsigned int tap_count, unsigned int id );
+
 
 void templateAppToucheCancelled( float x, float y, unsigned int tap_count );
 
@@ -67,10 +82,18 @@ void templateAppAccelerometer( float x, float y, float z );
 
 void templateAppExit( void );
 
+
+//In case the application is made for iOS devices.
 	#ifndef __IPHONE_4_0
 
+        //The difference in compilers requires extern "C" code
+        //for compatibility.
 		extern "C"
 		{
+		//The actual gluing code
+		//Every command is exported from Java to C/C++
+		//This includes the initialization, drawing commands and so forth.
+		//Commands for input (multitouch/controller support) is added here.
 			JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_Init( JNIEnv *env, jobject obj, jint width, jint height, jstring apkFilePath );
 
 			JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_Draw( JNIEnv *env, jobject obj );
@@ -79,17 +102,25 @@ void templateAppExit( void );
 
 			JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheMoved( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count );
 
+			JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheMoved2( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count, jint id );
+
 			JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheEnded( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count );
 
 			JNIEXPORT void JNICALL Java_com_android_templateApp_templateApp_Accelerometer( JNIEnv *env, jobject obj, jfloat x, jfloat y, jfloat z );
 		};
 
+
+		//Since the check for iOS devices returns negative
+		//the following commands will be executed instead.
+		//Hence the same gluing function has to be glued.
+		//Gluing the initialization function.
 		JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_Init( JNIEnv *env, jobject obj, jint width, jint height, jstring apkFilePath )
 		{
 			setenv( "FILESYSTEM", env->GetStringUTFChars( apkFilePath, NULL ), 1 );
 
 			if( templateApp.Init ) templateApp.Init( width, height );
 		}
+
 
 		JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_Draw( JNIEnv *env, jobject obj )
 		{ if( templateApp.Draw ) templateApp.Draw(); }
@@ -99,6 +130,9 @@ void templateAppExit( void );
 
 		JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheMoved( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count )
 		{ if( templateApp.ToucheMoved ) templateApp.ToucheMoved( x, y, tap_count ); }
+
+		JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheMoved2( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count, jint id )
+				{ if( templateApp.ToucheMoved2 ) templateApp.ToucheMoved2( x, y, tap_count, id ); }
 
 		JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheEnded( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count )
 		{ if( templateApp.ToucheEnded ) templateApp.ToucheEnded( x, y, tap_count ); }

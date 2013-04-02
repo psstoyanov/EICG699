@@ -1,6 +1,6 @@
 /*
 
-Book:        Game and Graphics Programming for iOS and Android with OpenGL(R) ES 2.0
+Book:      	Game and Graphics Programming for iOS and Android with OpenGL(R) ES 2.0
 Author:    	Romain Marucchi-Foino
 ISBN-10: 	1119975913
 ISBN-13: 	978-1119975915
@@ -36,6 +36,11 @@ as being the original software.
 
 #define FRAGMENT_SHADER ( char * )"fragment.glsl"
 
+// Used for touch handling.
+bool TOUCH_MAXIMUM[20];
+
+
+
 OBJ *obj = NULL;
 
 PROGRAM *program = NULL;
@@ -63,10 +68,16 @@ float roty		= -165.0f,
       distance	= -5.0f;
 
 
+
+// All functions defined through glue code
+// must be added in the same order
+// to the structure of the application.
+
 TEMPLATEAPP templateApp = { templateAppInit,
 							templateAppDraw,
 							templateAppToucheBegan,
 							templateAppToucheMoved,
+							templateAppToucheMoved2,
 							templateAppToucheEnded };
 
 
@@ -324,7 +335,7 @@ void templateAppDraw( void ) {
 		player->btrigidbody->setActivationState( ACTIVE_TAG );
 	}
 	
-	console_print("player_x: %3.f player_y: %3.f\n",player->location.x,player->location.y);
+	//console_print("player_x: %3.f player_y: %3.f\n",player->location.x,player->location.y);
 	next_eye.x = player->location.x + 
 				 distance * 
 				 cosf( roty * DEG_TO_RAD ) *
@@ -427,6 +438,56 @@ void templateAppToucheBegan( float x, float y, unsigned int tap_count )
 	}
 	else
 	{
+		view_location.x = x;
+		view_location.y = y;
+	}
+}
+
+void templateAppToucheMoved2( float x, float y, unsigned int tap_count, unsigned int id )
+{
+
+
+	//console_print("touch id: %3.f\n",id);
+	if(id==3)
+		console_print("nai-setne");
+	if( x > ( ( screen_size * 0.5f ) - ( screen_size * 0.05f ) ) &&
+		x < ( ( screen_size * 0.5f ) + ( screen_size * 0.05f ) ) ) {
+
+		move_delta.z =
+		view_delta.x =
+		view_delta.y = 0.0f;
+
+		move_location.x = x;
+		move_location.y = y;
+
+		view_location.x = x;
+		view_location.y = y;
+
+	}
+
+	else if( x < ( screen_size * 0.5f ) ) {
+
+		vec3 touche = { x,
+						y,
+						0.0f };
+
+		vec3_diff( &move_delta,
+				   &move_location,
+				   &touche );
+
+		vec3_normalize( &move_delta,
+						&move_delta );
+
+		move_delta.z = CLAMP( vec3_dist( &move_location, &touche ) / 128.0f,
+							  0.0f,
+							  1.0f );
+	}
+
+	else {
+
+		view_delta.x = view_delta.x * 0.75f + ( x - view_location.x ) * 0.25f;
+		view_delta.y = view_delta.y * 0.75f + ( y - view_location.y ) * 0.25f;
+
 		view_location.x = x;
 		view_location.y = y;
 	}
