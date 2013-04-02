@@ -54,12 +54,19 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
         { egl.eglDestroyContext( display, context ); }
     }
        
+    //Declare native functions for multitouch
+    
     public static native void ToucheBegan( float x, float y, int tap_count );
-    public static native void ToucheMoved2( float x, float y, int tap_count , int id);
+    //public static native void ToucheBegan2( float x, float y, int tap_count, int id );
 
     public static native void ToucheMoved( float x, float y, int tap_count );
+    public static native void ToucheMoved2( float x, float y, int tap_count , int id);
+    
     
     public static native void ToucheEnded( float x, float y, int tap_count );
+    //public static native void ToucheEnded2( float x, float y, int tap_count, int id );
+    
+    
     
     private long last_tap = 0;
     
