@@ -2,6 +2,8 @@ package com.android.templateApp;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
+import android.support.v4.view.MotionEventCompat;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import com.android.chapter7_6.R;
@@ -14,6 +16,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
 {
+	public static final String DEBUG_TAG = "MyLoggingTag";
 	public Renderer r;
 	
 	public GL2View( Context context )
@@ -52,6 +55,7 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     }
        
     public static native void ToucheBegan( float x, float y, int tap_count );
+    public static native void ToucheMoved2( float x, float y, int tap_count , int id);
 
     public static native void ToucheMoved( float x, float y, int tap_count );
     
@@ -61,6 +65,66 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     
     private int tap_count = 1;
     
+    // To handle multitouch events
+    
+    
+    public boolean onTouchEvent( MotionEvent event) 
+    {
+    	int pointerCount = event.getPointerCount();
+    	for (int i = 0; i < pointerCount; i++)
+    	{
+    		int x = (int) event.getX(i);
+    		int y = (int) event.getY(i);    		
+    		int id = event.getPointerId(i);
+    		int action = event.getActionMasked();
+    		int actionIndex = event.getActionIndex();
+    		String actionString;
+    		switch (action)
+    		{
+    			case MotionEvent.ACTION_DOWN:
+    			{
+    				actionString ="DOWN";
+    				
+    	        	break;
+    			}
+    				
+    			case MotionEvent.ACTION_UP:
+    			{
+    				actionString = "UP";
+    				
+    				break;	
+    			}
+    			case MotionEvent.ACTION_POINTER_DOWN:
+    			{
+    				actionString = "PNTR DOWN";
+    				ToucheBegan( event.getX(i), event.getY(i), tap_count );
+    				break;
+    			}
+    			case MotionEvent.ACTION_POINTER_UP:
+    			{
+    				ToucheEnded( event.getX(i), event.getY(i), tap_count );
+        			actionString = "PNTR UP";
+        			break;
+    			}
+    			case MotionEvent.ACTION_MOVE:
+    			{
+    				actionString = "MOVE";
+    				ToucheMoved( event.getX(i), event.getY(i), tap_count );
+    				//ToucheMoved2( event.getX(i), event.getY(i), tap_count, id );
+    				break;
+    			}
+    			default:
+    				actionString = "";
+    		}
+    		
+    		String touchStatus = "Action: " + actionString + " Index: " + actionIndex + " ID: " + id + " X: " + x + " Y: " + y;
+    		//Log.d(DEBUG_TAG, touchStatus);
+    		
+    		
+    	}
+        return true;
+    }
+    /*
     public boolean onTouchEvent( final MotionEvent event )
     {
         switch( event.getAction() )
@@ -90,7 +154,7 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
         }
 
         return true;
-    }       
+    } */
    
     private static class ConfigChooser implements GLSurfaceView.EGLConfigChooser {
 
