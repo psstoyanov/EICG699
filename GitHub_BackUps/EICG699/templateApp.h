@@ -76,6 +76,7 @@ void templateAppToucheEnded( float x, float y, unsigned int tap_count );
 //void templateAppToucheEnded2( float x, float y, unsigned int tap_count, unsigned int id );
 
 
+
 void templateAppToucheCancelled( float x, float y, unsigned int tap_count );
 
 void templateAppAccelerometer( float x, float y, float z );
@@ -100,11 +101,15 @@ void templateAppExit( void );
 
 			JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheBegan( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count );
 
+			//JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheBegan2( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count, jint id );
+
 			JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheMoved( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count );
 
 			JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheMoved2( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count, jint id );
 
 			JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheEnded( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count );
+
+			//JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheEnded2( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count, jint id );
 
 			JNIEXPORT void JNICALL Java_com_android_templateApp_templateApp_Accelerometer( JNIEnv *env, jobject obj, jfloat x, jfloat y, jfloat z );
 		};
@@ -128,6 +133,9 @@ void templateAppExit( void );
 		JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheBegan( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count )
 		{ if( templateApp.ToucheBegan ) templateApp.ToucheBegan( x, y, tap_count ); }
 
+		//JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheBegan2( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count, jint id )
+		//{ if( templateApp.ToucheBegan ) templateApp.ToucheBegan( x, y, tap_count, id ); }
+
 		JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheMoved( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count )
 		{ if( templateApp.ToucheMoved ) templateApp.ToucheMoved( x, y, tap_count ); }
 
@@ -136,6 +144,9 @@ void templateAppExit( void );
 
 		JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheEnded( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count )
 		{ if( templateApp.ToucheEnded ) templateApp.ToucheEnded( x, y, tap_count ); }
+
+		//JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheEnded2( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count, jint id )
+		//{ if( templateApp.ToucheEnded ) templateApp.ToucheEnded( x, y, tap_count, id ); }
 
 		JNIEXPORT void JNICALL Java_com_android_templateApp_templateApp_Accelerometer( JNIEnv *env, jobject obj, jfloat x, jfloat y, jfloat z )
 		{ if( templateApp.Accelerometer ) templateApp.Accelerometer( x, y, z ); }
