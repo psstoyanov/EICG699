@@ -65,22 +65,34 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     
     private int tap_count = 1;
     
-    // To handle multitouch events
+    // Handling multitouch events
+    // Passing the ID and action from Android
+    // to be translated into C/C++ code
+    // through the glue code in "templateApp.h
     
     
     public boolean onTouchEvent( MotionEvent event) 
     {
+    	// The number of active touches.
     	int pointerCount = event.getPointerCount();
     	for (int i = 0; i < pointerCount; i++)
     	{
+    		// Loop through all the touch events
     		int x = (int) event.getX(i);
     		int y = (int) event.getY(i);    		
     		int id = event.getPointerId(i);
     		int action = event.getActionMasked();
     		int actionIndex = event.getActionIndex();
+    		
+    		
+    		// Pass the corresponding touch event handler
+    		// and ID to the glue code
     		String actionString;
     		switch (action)
     		{
+    		
+    		
+    		
     			case MotionEvent.ACTION_DOWN:
     			{
     				actionString ="DOWN";
@@ -97,20 +109,28 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     			case MotionEvent.ACTION_POINTER_DOWN:
     			{
     				actionString = "PNTR DOWN";
+    				
     				ToucheBegan( event.getX(i), event.getY(i), tap_count );
+    				//ToucheBegan2( event.getX(i), event.getY(i), tap_count, id );
+    				
     				break;
     			}
     			case MotionEvent.ACTION_POINTER_UP:
     			{
+    				actionString = "PNTR UP";
+    				
     				ToucheEnded( event.getX(i), event.getY(i), tap_count );
-        			actionString = "PNTR UP";
+    				//ToucheEnded2( event.getX(i), event.getY(i), tap_count, id );
+        			
         			break;
     			}
     			case MotionEvent.ACTION_MOVE:
     			{
     				actionString = "MOVE";
-    				ToucheMoved( event.getX(i), event.getY(i), tap_count );
-    				//ToucheMoved2( event.getX(i), event.getY(i), tap_count, id );
+    				
+    				//ToucheMoved( event.getX(i), event.getY(i), tap_count );
+    				ToucheMoved2( event.getX(i), event.getY(i), tap_count, id );
+    				
     				break;
     			}
     			default:
@@ -118,7 +138,7 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     		}
     		
     		String touchStatus = "Action: " + actionString + " Index: " + actionIndex + " ID: " + id + " X: " + x + " Y: " + y;
-    		//Log.d(DEBUG_TAG, touchStatus);
+    		Log.d(DEBUG_TAG, touchStatus);
     		
     		
     	}

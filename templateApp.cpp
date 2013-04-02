@@ -36,7 +36,10 @@ as being the original software.
 
 #define FRAGMENT_SHADER ( char * )"fragment.glsl"
 
+// Used for touch handling.
 bool TOUCH_MAXIMUM[20];
+
+
 
 OBJ *obj = NULL;
 
@@ -64,6 +67,11 @@ float roty		= -165.0f,
       next_rotz	= rotz,
       distance	= -5.0f;
 
+
+
+// All functions defined through glue code
+// must be added in the same order
+// to the structure of the application.
 
 TEMPLATEAPP templateApp = { templateAppInit,
 							templateAppDraw,
@@ -439,7 +447,9 @@ void templateAppToucheMoved2( float x, float y, unsigned int tap_count, unsigned
 {
 
 
-	console_print("touch id: %3.f\n",id);
+	//console_print("touch id: %3.f\n",id);
+	if(id==3)
+		console_print("nai-setne");
 	if( x > ( ( screen_size * 0.5f ) - ( screen_size * 0.05f ) ) &&
 		x < ( ( screen_size * 0.5f ) + ( screen_size * 0.05f ) ) ) {
 

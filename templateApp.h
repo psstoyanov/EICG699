@@ -61,14 +61,19 @@ void templateAppDraw( void );
 
 void templateAppToucheBegan( float x, float y, unsigned int tap_count );
 
+//void templateAppToucheBegan2( float x, float y, unsigned int tap_count, unsigned int id );
+
 
 
 void templateAppToucheMoved( float x, float y, unsigned int tap_count );
 
 void templateAppToucheMoved2( float x, float y, unsigned int tap_count, unsigned int id );
 
+
+
 void templateAppToucheEnded( float x, float y, unsigned int tap_count );
 
+//void templateAppToucheEnded2( float x, float y, unsigned int tap_count, unsigned int id );
 
 
 void templateAppToucheCancelled( float x, float y, unsigned int tap_count );
