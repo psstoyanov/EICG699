@@ -38,6 +38,7 @@ as being the original software.
 
 // Used for touch handling.
 int TOUCH_MAXIMUM[20];
+bool multiouch;
 
 
 
@@ -77,9 +78,11 @@ float roty		= -165.0f,
 TEMPLATEAPP templateApp = { templateAppInit,
 							templateAppDraw,
 							templateAppToucheBegan,
+							templateAppToucheBegan2,
 							templateAppToucheMoved,
 							templateAppToucheMoved2,
-							templateAppToucheEnded };
+							templateAppToucheEnded,
+							templateAppToucheEnded2 };
 
 
 btSoftBodyRigidBodyCollisionConfiguration *collisionconfiguration = NULL;
@@ -98,6 +101,7 @@ void init_touch_values(void)
 			{
 				TOUCH_MAXIMUM[i]= 0;
 			}
+	multiouch=false;
 }
 
 void init_physic_world( void )
@@ -312,7 +316,6 @@ void templateAppDraw( void ) {
 	GFX_load_identity();
 
 
-
 	if( view_delta.x || view_delta.y ) { 
 
 		if( view_delta.x ) next_rotz -= view_delta.x;
@@ -455,6 +458,26 @@ void templateAppToucheBegan( float x, float y, unsigned int tap_count )
 	}
 }
 
+void templateAppToucheBegan2( float x, float y, unsigned int tap_count, unsigned int id )
+{
+	multiouch=true;
+	if( x < ( screen_size * 0.5f ) )
+	{
+		TOUCH_MAXIMUM[id]=1;
+		console_print("move touch began");
+		move_location.x = x;
+		move_location.y = y;
+
+	}
+	else
+	{
+		TOUCH_MAXIMUM[id]=2;
+		console_print("view touch began");
+		view_location.x = x;
+		view_location.y = y;
+	}
+}
+
 void templateAppToucheMoved2( float x, float y, unsigned int tap_count, unsigned int id )
 {
 
@@ -496,8 +519,8 @@ void templateAppToucheMoved2( float x, float y, unsigned int tap_count, unsigned
 	 */
 	else if( x < ( screen_size * 0.5f ) ) {
 
-		TOUCH_MAXIMUM[id]=2;
-		console_print("move touch");
+		TOUCH_MAXIMUM[id]=1;
+		//console_print("move touch");
 
 		/* Store the current touch as a 3D vector.
 		 */
@@ -539,8 +562,8 @@ void templateAppToucheMoved2( float x, float y, unsigned int tap_count, unsigned
 		 * smooth things out a bit.
 		 */
 
-		TOUCH_MAXIMUM[id]=1;
-		console_print("view touch");
+		TOUCH_MAXIMUM[id]=2;
+		//console_print("view touch");
 		view_delta.x = view_delta.x * 0.75f + ( x - view_location.x ) * 0.25f;
 		view_delta.y = view_delta.y * 0.75f + ( y - view_location.y ) * 0.25f;
 
@@ -601,6 +624,14 @@ void templateAppToucheMoved( float x, float y, unsigned int tap_count )
 void templateAppToucheEnded( float x, float y, unsigned int tap_count )
 {
 	move_delta.z = 0.0f;
+}
+
+void templateAppToucheEnded2( float x, float y, unsigned int tap_count, unsigned int id )
+{
+	if(id!=0)
+	{
+	TOUCH_MAXIMUM[id]=0;
+	}
 }
 
 
