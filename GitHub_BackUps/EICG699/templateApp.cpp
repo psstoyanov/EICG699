@@ -24,7 +24,7 @@ as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 
 */
-
+#include<vector>
 
 #include "templateApp.h"
 
@@ -37,9 +37,10 @@ as being the original software.
 #define FRAGMENT_SHADER ( char * )"fragment.glsl"
 
 // Used for touch handling.
-int TOUCH_MAXIMUM[20];
 
+bool multiouch;
 
+std::vector <int> MAXIMUM_TOUCH;
 
 
 OBJ *obj = NULL;
@@ -77,9 +78,11 @@ float roty		= -165.0f,
 TEMPLATEAPP templateApp = { templateAppInit,
 							templateAppDraw,
 							templateAppToucheBegan,
+							templateAppToucheBegan2,
 							templateAppToucheMoved,
 							templateAppToucheMoved2,
-							templateAppToucheEnded };
+							templateAppToucheEnded,
+							templateAppToucheEnded2 };
 
 
 btSoftBodyRigidBodyCollisionConfiguration *collisionconfiguration = NULL;
@@ -94,10 +97,7 @@ btSoftRigidDynamicsWorld *dynamicsworld = NULL;
 
 void init_touch_values(void)
 {
-	for( int i=0; i<20;i++)
-			{
-				TOUCH_MAXIMUM[i]= 0;
-			}
+	MAXIMUM_TOUCH.clear();
 }
 
 void init_physic_world( void )
@@ -312,7 +312,6 @@ void templateAppDraw( void ) {
 	GFX_load_identity();
 
 
-
 	if( view_delta.x || view_delta.y ) { 
 
 		if( view_delta.x ) next_rotz -= view_delta.x;
@@ -436,23 +435,54 @@ void templateAppDraw( void ) {
 	}
 	
 	dynamicsworld->stepSimulation( 1.0f / 60.0f );
+
 }
 
 
 void templateAppToucheBegan( float x, float y, unsigned int tap_count )
 {
-
+	int touch_type;
 	if( x < ( screen_size * 0.5f ) )
 	{
+		touch_type=1;
 		move_location.x = x;
 		move_location.y = y;
 
 	}
 	else
 	{
+		touch_type=2;
 		view_location.x = x;
 		view_location.y = y;
 	}
+	MAXIMUM_TOUCH.push_back(touch_type);
+}
+
+void templateAppToucheBegan2( float x, float y, unsigned int tap_count, unsigned int id )
+{
+	int touch_type;
+	multiouch=true;
+	if( x < ( screen_size * 0.5f ) )
+	{
+		touch_type=1;
+		console_print("move touch began");
+		move_location.x = x;
+		move_location.y = y;
+
+	}
+	else
+	{
+		touch_type=2;
+		console_print("view touch began");
+		view_location.x = x;
+		view_location.y = y;
+	}
+	MAXIMUM_TOUCH.push_back(touch_type);
+	/*if(MAXIMUM_TOUCH.size()!=0)
+				{
+				for(int i=0;i<MAXIMUM_TOUCH.size();i++)
+					console_print("Maximum_touch position: %3.d Maximum_touch value: %3.d\n",i,MAXIMUM_TOUCH[i]);
+				}*/
 }
 
 void templateAppToucheMoved2( float x, float y, unsigned int tap_count, unsigned int id )
@@ -468,6 +498,7 @@ void templateAppToucheMoved2( float x, float y, unsigned int tap_count, unsigned
 	 * of the screen and swipes all the way to the other side, you can then stop
 	 * the movement.
 	 */
+
 	if( x > ( ( screen_size * 0.5f ) - ( screen_size * 0.05f ) ) &&
 		x < ( ( screen_size * 0.5f ) + ( screen_size * 0.05f ) ) ) {
 
@@ -496,8 +527,8 @@ void templateAppToucheMoved2( float x, float y, unsigned int tap_count, unsigned
 	 */
 	else if( x < ( screen_size * 0.5f ) ) {
 
-		TOUCH_MAXIMUM[id]=2;
-		console_print("move touch");
+
+		//console_print("move touch");
 
 		/* Store the current touch as a 3D vector.
 		 */
@@ -539,8 +570,8 @@ void templateAppToucheMoved2( float x, float y, unsigned int tap_count, unsigned
 		 * smooth things out a bit.
 		 */
 
-		TOUCH_MAXIMUM[id]=1;
-		console_print("view touch");
+
+		//console_print("view touch");
 		view_delta.x = view_delta.x * 0.75f + ( x - view_location.x ) * 0.25f;
 		view_delta.y = view_delta.y * 0.75f + ( y - view_location.y ) * 0.25f;
 
@@ -600,7 +631,13 @@ void templateAppToucheMoved( float x, float y, unsigned int tap_count )
 
 void templateAppToucheEnded( float x, float y, unsigned int tap_count )
 {
+	MAXIMUM_TOUCH.clear();
 	move_delta.z = 0.0f;
+}
+
+void templateAppToucheEnded2( float x, float y, unsigned int tap_count, unsigned int id )
+{
+	MAXIMUM_TOUCH.erase(MAXIMUM_TOUCH.begin()+id);
 }
 
 

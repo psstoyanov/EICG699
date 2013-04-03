@@ -57,14 +57,14 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     //Declare native functions for multitouch
     
     public static native void ToucheBegan( float x, float y, int tap_count );
-    //public static native void ToucheBegan2( float x, float y, int tap_count, int id );
+    public static native void ToucheBegan2( float x, float y, int tap_count, int id );
 
     public static native void ToucheMoved( float x, float y, int tap_count );
     public static native void ToucheMoved2( float x, float y, int tap_count , int id);
     
     
     public static native void ToucheEnded( float x, float y, int tap_count );
-    //public static native void ToucheEnded2( float x, float y, int tap_count, int id );
+    public static native void ToucheEnded2( float x, float y, int tap_count, int id );
     
     
     
@@ -81,16 +81,20 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     public boolean onTouchEvent( MotionEvent event) 
     {
     	// The number of active touches.
+    	
+    	
     	int pointerCount = event.getPointerCount();
     	for (int i = 0; i < pointerCount; i++)
+    	//if (pointerCount!=0)
     	{
     		// Loop through all the touch events
+    		
+    		int action = MotionEventCompat.getActionMasked(event);
+    		int actionIndex = MotionEventCompat.getActionIndex(event);
+    		int id = MotionEventCompat.getPointerId(event, actionIndex);
+    		
     		int x = (int) event.getX(i);
     		int y = (int) event.getY(i);    		
-    		int id = event.getPointerId(i);
-    		int action = event.getActionMasked();
-    		int actionIndex = event.getActionIndex();
-    		
     		
     		// Pass the corresponding touch event handler
     		// and ID to the glue code
@@ -103,13 +107,20 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     			case MotionEvent.ACTION_DOWN:
     			{
     				actionString ="DOWN";
-    				
+    				if( event.getEventTime() - last_tap < 333 ) tap_count = tap_count + 1;
+    	        	else tap_count = 1;
+
+    	        	last_tap = event.getEventTime();
+
+    	        	ToucheBegan( event.getX(0), event.getY(0), tap_count );
+    	        	
     	        	break;
     			}
     				
     			case MotionEvent.ACTION_UP:
     			{
     				actionString = "UP";
+    				ToucheEnded( event.getX(i), event.getY(i), tap_count );
     				
     				break;	
     			}
@@ -117,17 +128,17 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     			{
     				actionString = "PNTR DOWN";
     				
-    				ToucheBegan( event.getX(i), event.getY(i), tap_count );
-    				//ToucheBegan2( event.getX(i), event.getY(i), tap_count, id );
-    				
+    				//ToucheBegan( event.getX(i), event.getY(i), tap_count );
+    				ToucheBegan2( event.getX(i), event.getY(i), tap_count, id );
+    				Log.d(DEBUG_TAG, "sdfaafdsa");
     				break;
     			}
     			case MotionEvent.ACTION_POINTER_UP:
     			{
     				actionString = "PNTR UP";
     				
-    				ToucheEnded( event.getX(i), event.getY(i), tap_count );
-    				//ToucheEnded2( event.getX(i), event.getY(i), tap_count, id );
+    				//ToucheEnded( event.getX(i), event.getY(i), tap_count );
+    				ToucheEnded2( event.getX(i), event.getY(i), tap_count, id );
         			
         			break;
     			}
@@ -135,21 +146,22 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     			{
     				actionString = "MOVE";
     				
-    				//ToucheMoved( event.getX(i), event.getY(i), tap_count );
-    				ToucheMoved2( event.getX(i), event.getY(i), tap_count, id );
-    				
+    				    ToucheMoved2( event.getX(i), event.getY(i), tap_count, i );
+    				    //String blah= "ID:"+ i +" X: " + x + " Y: " + y;
+    				    //Log.d(DEBUG_TAG, blah);
     				break;
     			}
     			default:
     				actionString = "";
     		}
-    		
-    		String touchStatus = "Action: " + actionString + " Index: " + actionIndex + " ID: " + id + " X: " + x + " Y: " + y;
+    		//String touchStatus = "Action: " + actionString + " Index: " + actionIndex + " ID: " + id + " X: " + x + " Y: " + y;
     		//Log.d(DEBUG_TAG, touchStatus);
     		
+   
     		
     	}
         return true;
+        
     }
     /*
     public boolean onTouchEvent( final MotionEvent event )
