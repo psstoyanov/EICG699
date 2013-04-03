@@ -37,7 +37,8 @@ as being the original software.
 #define FRAGMENT_SHADER ( char * )"fragment.glsl"
 
 // Used for touch handling.
-bool TOUCH_MAXIMUM[20];
+int TOUCH_MAXIMUM[20];
+
 
 
 
@@ -91,6 +92,13 @@ btConstraintSolver *solver = NULL;
 
 btSoftRigidDynamicsWorld *dynamicsworld = NULL;
 
+void init_touch_values(void)
+{
+	for( int i=0; i<20;i++)
+			{
+				TOUCH_MAXIMUM[i]= 0;
+			}
+}
 
 void init_physic_world( void )
 {
@@ -249,6 +257,7 @@ void templateAppInit( int width, int height ) {
 	
 	load_physic_world();
 	
+	init_touch_values();
 
 	player = OBJ_get_mesh( obj, "player", 0 );
 	
@@ -301,6 +310,7 @@ void templateAppDraw( void ) {
 
 	GFX_set_matrix_mode( MODELVIEW_MATRIX );
 	GFX_load_identity();
+
 
 
 	if( view_delta.x || view_delta.y ) { 
@@ -431,10 +441,12 @@ void templateAppDraw( void ) {
 
 void templateAppToucheBegan( float x, float y, unsigned int tap_count )
 {
+
 	if( x < ( screen_size * 0.5f ) )
 	{
 		move_location.x = x;
 		move_location.y = y;
+
 	}
 	else
 	{
@@ -448,15 +460,29 @@ void templateAppToucheMoved2( float x, float y, unsigned int tap_count, unsigned
 
 
 	//console_print("touch id: %3.f\n",id);
-	if(id==3)
-		console_print("nai-setne");
+	//if(id==2)
+    //console_print("nai-setne");
+
+	/* First create a "dead zone" that occupies 10% of the screen size,
+	 * located at the center of the screen. This way, if the user is on one side
+	 * of the screen and swipes all the way to the other side, you can then stop
+	 * the movement.
+	 */
 	if( x > ( ( screen_size * 0.5f ) - ( screen_size * 0.05f ) ) &&
 		x < ( ( screen_size * 0.5f ) + ( screen_size * 0.05f ) ) ) {
 
+		/* Stop the current movement for the view or if the camera is
+		 * on the move
+		 */
 		move_delta.z =
 		view_delta.x =
 		view_delta.y = 0.0f;
 
+		/* In order to make things easier for the user, assign the current
+		 * location of the touch to be either the starting point of the view or the
+		 * movement, since you never now in which direction the user will move the
+		 * touch.
+		 */
 		move_location.x = x;
 		move_location.y = y;
 
@@ -465,29 +491,62 @@ void templateAppToucheMoved2( float x, float y, unsigned int tap_count, unsigned
 
 	}
 
+	/* If the touch start is on the left side of the screen, deal with it
+	 * as a camera movement.
+	 */
 	else if( x < ( screen_size * 0.5f ) ) {
 
+		TOUCH_MAXIMUM[id]=2;
+		console_print("move touch");
+
+		/* Store the current touch as a 3D vector.
+		 */
 		vec3 touche = { x,
 						y,
 						0.0f };
 
+		/* Calculate the delta to determine which direction the touch is
+		 * going.
+		 */
 		vec3_diff( &move_delta,
 				   &move_location,
 				   &touche );
 
+		/* Normalize the delta to have a direction vector in the range of
+		 * -1 to 1.
+		 */
 		vec3_normalize( &move_delta,
 						&move_delta );
 
+		/* Calculate the force (basically the distance from the starting
+		 * movement location to the current touch location) and divide it by a factor
+		 * in pixels. This way, the closer to the starting point, the slower the
+		 * movement will be, and as the touch distance increases, the movement speed
+		 * will increase up to its maximum.
+		 */
 		move_delta.z = CLAMP( vec3_dist( &move_location, &touche ) / 128.0f,
 							  0.0f,
 							  1.0f );
 	}
 
+	/* Since the touch is on the right side of the screen, simply calculate
+	 * the delta for the view so you can then use it to manipulate the X and Z
+	 * rotation of the camera.
+	 */
 	else {
 
+		/* Calculate the view delta and linearly interpolate the values to
+		 * smooth things out a bit.
+		 */
+
+		TOUCH_MAXIMUM[id]=1;
+		console_print("view touch");
 		view_delta.x = view_delta.x * 0.75f + ( x - view_location.x ) * 0.25f;
 		view_delta.y = view_delta.y * 0.75f + ( y - view_location.y ) * 0.25f;
 
+		/* Remember the current location as the starting point for the next
+		 * movement (if any).
+		 */
 		view_location.x = x;
 		view_location.y = y;
 	}

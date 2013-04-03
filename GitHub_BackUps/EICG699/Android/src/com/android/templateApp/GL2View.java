@@ -145,7 +145,7 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     		}
     		
     		String touchStatus = "Action: " + actionString + " Index: " + actionIndex + " ID: " + id + " X: " + x + " Y: " + y;
-    		Log.d(DEBUG_TAG, touchStatus);
+    		//Log.d(DEBUG_TAG, touchStatus);
     		
     		
     	}
