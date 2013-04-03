@@ -81,6 +81,8 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     public boolean onTouchEvent( MotionEvent event) 
     {
     	// The number of active touches.
+    	
+    	
     	int pointerCount = event.getPointerCount();
     	for (int i = 0; i < pointerCount; i++)
     	//if (pointerCount!=0)
@@ -118,7 +120,7 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     			case MotionEvent.ACTION_UP:
     			{
     				actionString = "UP";
-    				ToucheEnded( event.getX(0), event.getY(0), tap_count );
+    				ToucheEnded( event.getX(i), event.getY(i), tap_count );
     				
     				break;	
     			}
@@ -128,7 +130,7 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     				
     				//ToucheBegan( event.getX(i), event.getY(i), tap_count );
     				ToucheBegan2( event.getX(i), event.getY(i), tap_count, id );
-    				
+    				Log.d(DEBUG_TAG, "sdfaafdsa");
     				break;
     			}
     			case MotionEvent.ACTION_POINTER_UP:
@@ -144,17 +146,18 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     			{
     				actionString = "MOVE";
     				
-    				    ToucheMoved2( event.getX(i), event.getY(i), tap_count, id );
-    				
+    				    ToucheMoved2( event.getX(i), event.getY(i), tap_count, i );
+    				    //String blah= "ID:"+ i +" X: " + x + " Y: " + y;
+    				    //Log.d(DEBUG_TAG, blah);
     				break;
     			}
     			default:
     				actionString = "";
     		}
-    		String touchStatus = "Action: " + actionString + " Index: " + actionIndex + " ID: " + id + " X: " + x + " Y: " + y;
-    		Log.d(DEBUG_TAG, touchStatus);
+    		//String touchStatus = "Action: " + actionString + " Index: " + actionIndex + " ID: " + id + " X: " + x + " Y: " + y;
+    		//Log.d(DEBUG_TAG, touchStatus);
     		
-    		
+   
     		
     	}
         return true;
