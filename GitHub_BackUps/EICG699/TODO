@@ -3,7 +3,15 @@
 Multitouch support added up-to 10 fingers.
 The style is similar to the one implemented in TegraSuit.
 Small issue when a touch has been moved up.
+
+Fixed false positives when releasing touch pointers in Java:
+http://developer.android.com/reference/android/view/MotionEvent.html#findPointerIndex(int)
+findPointerIndex (int pointerId)
+
+
 Initial commits with passing commands from Java.
+
+
 
 Controller support.
 
