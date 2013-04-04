@@ -495,7 +495,7 @@ void templateAppToucheBegan( float x, float y, unsigned int tap_count )
 
 void templateAppToucheBegan2( float x, float y, unsigned int tap_count, unsigned int id )
 {
-
+	console_print("aha, false_positives");
 	if( x < ( screen_size * 0.5f ) )
 	{
 		if(!movement_touch())
@@ -683,8 +683,12 @@ void templateAppToucheEnded2( unsigned int tap_count, unsigned int id )
 {
 
 	touch_type[id]=0;
-
-	//move_delta.z = 0.0f;
+	if(!movement_touch())
+	{
+		move_delta.x =
+		move_delta.y =
+		move_delta.z = 0.0f;
+	}
 }
 
 

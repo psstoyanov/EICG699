@@ -81,10 +81,12 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
 	float[] x = new float[MAX_NUMBER_OF_POINT];
 	float[] y = new float[MAX_NUMBER_OF_POINT];
 	boolean[] touching = new boolean[MAX_NUMBER_OF_POINT];
-    
+	boolean[] false_positive = new boolean[MAX_NUMBER_OF_POINT];
+	int lastPointercounter;
 	
 	public boolean onTouchEvent(MotionEvent event) 
 	{
+		
 		int action = (event.getAction() & MotionEvent.ACTION_MASK);
 		
 		int pointCount = event.getPointerCount();
@@ -103,27 +105,43 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
 						 ||(action == MotionEvent.ACTION_POINTER_DOWN)
 						 ||(action == MotionEvent.ACTION_MOVE))
 				 {
-					 if(touching[id]!=true)
+					 if(touching[id]!=true&&false_positive[id]!=true)
 					 {
+						 
+						 
 						 ToucheBegan2( x[id], y[id], tap_count, id );
 					 }
+					 
 					 else
 					 {
 						 ToucheMoved2( x[id], y[id], tap_count ,  id);
 					 }
 						 
 					 touching[id] = true;
+					 false_positive[id]=true;
 					 //String touchStatus = " ID: " + id + " X: " + x + " Y: " + y;
 			         //Log.d(DEBUG_TAG, touchStatus);
 				 }
 				 else
 				 {
-					 ToucheEnded2(  tap_count, id );
-					 touching[id] = false;
+					 false_positive[id]=false;
+					 if(pointCount==1)
+					 {
+						 touching[id]=false;
+						 ToucheEnded2( tap_count, id);
+					 }
 				 }
 			 } 
 		 }
-
+		for( int i=0; i < MAX_NUMBER_OF_POINT; i++)
+		{
+			if(event.findPointerIndex(i)==-1&&false_positive[i]!=true)
+			{
+				
+				touching[i]=false;
+				ToucheEnded2( tap_count, i);
+			}
+		}
 		invalidate();	
 		return true;
 		
