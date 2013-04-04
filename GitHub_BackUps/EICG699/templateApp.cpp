@@ -38,9 +38,48 @@ as being the original software.
 
 // Used for touch handling.
 
-bool multiouch;
 
-std::vector <int> MAXIMUM_TOUCH;
+
+
+	const int MAX_NUMBER_OF_POINT=20;
+	int active_pointers=0;
+	float touch_x[MAX_NUMBER_OF_POINT]={0},touch_y[MAX_NUMBER_OF_POINT]={0};
+	int touch_type[20]={0};
+	bool touching[20]={false};
+
+
+
+void active_multitouch()
+{
+	int active_touches=0;
+	for (int i=0;i<MAX_NUMBER_OF_POINT;i++)
+		{
+		if(touch_type[i]!=0)
+		active_touches++;
+		}
+	active_pointers=active_touches;
+
+}
+bool movement_touch()
+{
+	for (int i=0;i<MAX_NUMBER_OF_POINT;i++)
+			{
+			if(touch_type[i]==1)
+			return true;
+			}
+	return false;
+}
+bool view_touch()
+{
+	for (int i=0;i<MAX_NUMBER_OF_POINT;i++)
+			{
+			if(touch_type[i]==2)
+			return true;
+			}
+	return false;
+}
+
+
 
 
 OBJ *obj = NULL;
@@ -95,10 +134,7 @@ btConstraintSolver *solver = NULL;
 
 btSoftRigidDynamicsWorld *dynamicsworld = NULL;
 
-void init_touch_values(void)
-{
-	MAXIMUM_TOUCH.clear();
-}
+
 
 void init_physic_world( void )
 {
@@ -256,12 +292,10 @@ void templateAppInit( int width, int height ) {
 	init_physic_world();
 	
 	load_physic_world();
-	
-	init_touch_values();
 
 	player = OBJ_get_mesh( obj, "player", 0 );
 	
-	player->btrigidbody->setFriction( 10.0f );
+	player->btrigidbody->setFriction( 20.0f );
 	
 	memcpy( &eye, &player->location, sizeof( vec3 ) );
 	
@@ -433,7 +467,8 @@ void templateAppDraw( void ) {
 		
 		++i;
 	}
-	
+	active_multitouch();
+
 	dynamicsworld->stepSimulation( 1.0f / 60.0f );
 
 }
@@ -441,57 +476,51 @@ void templateAppDraw( void ) {
 
 void templateAppToucheBegan( float x, float y, unsigned int tap_count )
 {
-	int touch_type;
+
 	if( x < ( screen_size * 0.5f ) )
 	{
-		touch_type=1;
+
 		move_location.x = x;
 		move_location.y = y;
 
 	}
 	else
 	{
-		touch_type=2;
+
 		view_location.x = x;
 		view_location.y = y;
 	}
-	MAXIMUM_TOUCH.push_back(touch_type);
+
 }
 
 void templateAppToucheBegan2( float x, float y, unsigned int tap_count, unsigned int id )
 {
-	int touch_type;
-	multiouch=true;
+
 	if( x < ( screen_size * 0.5f ) )
 	{
-		touch_type=1;
-		console_print("move touch began");
-		move_location.x = x;
-		move_location.y = y;
+		if(!movement_touch())
+		{
+			touch_type[id]=1;
+			move_location.x = x;
+			move_location.y = y;
+		}
 
 	}
 	else
 	{
-		touch_type=2;
-		console_print("view touch began");
-		view_location.x = x;
-		view_location.y = y;
+		if(!view_touch())
+		{
+			touch_type[id]=2;
+			view_location.x = x;
+			view_location.y = y;
+		}
 	}
-	MAXIMUM_TOUCH.push_back(touch_type);
-	/*if(MAXIMUM_TOUCH.size()!=0)
-				{
-				for(int i=0;i<MAXIMUM_TOUCH.size();i++)
-					console_print("Maximum_touch position: %3.d Maximum_touch value: %3.d\n",i,MAXIMUM_TOUCH[i]);
-				}*/
+
 }
 
 void templateAppToucheMoved2( float x, float y, unsigned int tap_count, unsigned int id )
 {
 
-
-	//console_print("touch id: %3.f\n",id);
-	//if(id==2)
-    //console_print("nai-setne");
 
 	/* First create a "dead zone" that occupies 10% of the screen size,
 	 * located at the center of the screen. This way, if the user is on one side
@@ -500,7 +529,8 @@ void templateAppToucheMoved2( float x, float y, unsigned int tap_count, unsigned
 	 */
 
 	if( x > ( ( screen_size * 0.5f ) - ( screen_size * 0.05f ) ) &&
-		x < ( ( screen_size * 0.5f ) + ( screen_size * 0.05f ) ) ) {
+		x < ( ( screen_size * 0.5f ) + ( screen_size * 0.05f ) ) )
+	{
 
 		/* Stop the current movement for the view or if the camera is
 		 * on the move
@@ -514,72 +544,83 @@ void templateAppToucheMoved2( float x, float y, unsigned int tap_count, unsigned
 		 * movement, since you never now in which direction the user will move the
 		 * touch.
 		 */
-		move_location.x = x;
-		move_location.y = y;
+		if(touch_type[id]==1)
+		{
+			move_location.x =x;
+			move_location.y =y;
+		}
+		if(touch_type[id]==2)
+		{
+			view_location.x =x;
+			view_location.y =y;
+		}
 
-		view_location.x = x;
-		view_location.y = y;
 
 	}
 
 	/* If the touch start is on the left side of the screen, deal with it
 	 * as a camera movement.
 	 */
-	else if( x < ( screen_size * 0.5f ) ) {
+	else if( x < ( screen_size * 0.5f ) )
+	{
+		if(touch_type[id]==1)
+		{
+			//console_print("move touch");
 
+			/* Store the current touch as a 3D vector.
+			 */
+			vec3 touche = { x,
+					        y,
+					        0.0f };
 
-		//console_print("move touch");
+			/* Calculate the delta to determine which direction the touch is
+			 * going.
+			*/
+			vec3_diff( &move_delta,
+					   &move_location,
+					   &touche );
 
-		/* Store the current touch as a 3D vector.
-		 */
-		vec3 touche = { x,
-						y,
-						0.0f };
+			/* Normalize the delta to have a direction vector in the range of
+			 * -1 to 1.
+			 */
+			vec3_normalize( &move_delta,
+					        &move_delta );
 
-		/* Calculate the delta to determine which direction the touch is
-		 * going.
-		 */
-		vec3_diff( &move_delta,
-				   &move_location,
-				   &touche );
-
-		/* Normalize the delta to have a direction vector in the range of
-		 * -1 to 1.
-		 */
-		vec3_normalize( &move_delta,
-						&move_delta );
-
-		/* Calculate the force (basically the distance from the starting
-		 * movement location to the current touch location) and divide it by a factor
-		 * in pixels. This way, the closer to the starting point, the slower the
-		 * movement will be, and as the touch distance increases, the movement speed
-		 * will increase up to its maximum.
-		 */
-		move_delta.z = CLAMP( vec3_dist( &move_location, &touche ) / 128.0f,
-							  0.0f,
-							  1.0f );
+			/* Calculate the force (basically the distance from the starting
+			 * movement location to the current touch location) and divide it by a factor
+			 * in pixels. This way, the closer to the starting point, the slower the
+			 * movement will be, and as the touch distance increases, the movement speed
+			 * will increase up to its maximum.
+			 */
+			move_delta.z = CLAMP( vec3_dist( &move_location, &touche ) / 128.0f,
+																		   0.0f,
+																		   1.0f );
+		}
 	}
 
 	/* Since the touch is on the right side of the screen, simply calculate
 	 * the delta for the view so you can then use it to manipulate the X and Z
 	 * rotation of the camera.
 	 */
-	else {
+	else
+	{
+		if(touch_type[id]==2)
+		{
+			/* Calculate the view delta and linearly interpolate the values to
+			 * smooth things out a bit.
+			 */
 
-		/* Calculate the view delta and linearly interpolate the values to
-		 * smooth things out a bit.
-		 */
 
+			//console_print("view touch");
+			view_delta.x = view_delta.x * 0.75f + ( x - view_location.x ) * 0.25f;
+			view_delta.y = view_delta.y * 0.75f + ( y - view_location.y ) * 0.25f;
 
-		//console_print("view touch");
-		view_delta.x = view_delta.x * 0.75f + ( x - view_location.x ) * 0.25f;
-		view_delta.y = view_delta.y * 0.75f + ( y - view_location.y ) * 0.25f;
-
-		/* Remember the current location as the starting point for the next
-		 * movement (if any).
-		 */
-		view_location.x = x;
-		view_location.y = y;
+			/* Remember the current location as the starting point for the next
+			 * movement (if any).
+			*/
+			view_location.x = x;
+			view_location.y = y;
+		}
 	}
 }
 
@@ -587,7 +628,8 @@ void templateAppToucheMoved2( float x, float y, unsigned int tap_count, unsigned
 void templateAppToucheMoved( float x, float y, unsigned int tap_count )
 {
 	if( x > ( ( screen_size * 0.5f ) - ( screen_size * 0.05f ) ) &&
-		x < ( ( screen_size * 0.5f ) + ( screen_size * 0.05f ) ) ) {
+		x < ( ( screen_size * 0.5f ) + ( screen_size * 0.05f ) ) )
+	{
 		
 		move_delta.z =
 		view_delta.x =
@@ -600,7 +642,8 @@ void templateAppToucheMoved( float x, float y, unsigned int tap_count )
 		view_location.y = y;
 	}
 	
-	else if( x < ( screen_size * 0.5f ) ) {
+	else if( x < ( screen_size * 0.5f ) )
+	{
 
 		vec3 touche = { x, 
 						y,
@@ -618,7 +661,8 @@ void templateAppToucheMoved( float x, float y, unsigned int tap_count )
 							  1.0f );
 	}
 	
-	else {
+	else
+	{
 
 		view_delta.x = view_delta.x * 0.75f + ( x - view_location.x ) * 0.25f;
 		view_delta.y = view_delta.y * 0.75f + ( y - view_location.y ) * 0.25f;
@@ -629,15 +673,18 @@ void templateAppToucheMoved( float x, float y, unsigned int tap_count )
 }
 
 
-void templateAppToucheEnded( float x, float y, unsigned int tap_count )
+void templateAppToucheEnded( unsigned int tap_count  )
 {
-	MAXIMUM_TOUCH.clear();
+
 	move_delta.z = 0.0f;
 }
 
-void templateAppToucheEnded2( float x, float y, unsigned int tap_count, unsigned int id )
+void templateAppToucheEnded2( unsigned int tap_count, unsigned int id )
 {
-	MAXIMUM_TOUCH.erase(MAXIMUM_TOUCH.begin()+id);
+
+	touch_type[id]=0;
+
+	//move_delta.z = 0.0f;
 }
 
 

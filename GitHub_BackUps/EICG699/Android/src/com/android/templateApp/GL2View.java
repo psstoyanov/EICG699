@@ -63,8 +63,8 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     public static native void ToucheMoved2( float x, float y, int tap_count , int id);
     
     
-    public static native void ToucheEnded( float x, float y, int tap_count );
-    public static native void ToucheEnded2( float x, float y, int tap_count, int id );
+    public static native void ToucheEnded(  int tap_count );
+    public static native void ToucheEnded2( int tap_count, int id );
     
     
     
@@ -77,7 +77,59 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     // to be translated into C/C++ code
     // through the glue code in "templateApp.h
     
+    final int MAX_NUMBER_OF_POINT = 20;
+	float[] x = new float[MAX_NUMBER_OF_POINT];
+	float[] y = new float[MAX_NUMBER_OF_POINT];
+	boolean[] touching = new boolean[MAX_NUMBER_OF_POINT];
     
+	
+	public boolean onTouchEvent(MotionEvent event) 
+	{
+		int action = (event.getAction() & MotionEvent.ACTION_MASK);
+		
+		int pointCount = event.getPointerCount();
+		
+		for (int i = 0; i < pointCount; i++) 
+		{
+			 int id = event.getPointerId(i);
+			 
+			 //Ignore pointer higher than our max.
+			 if(id < MAX_NUMBER_OF_POINT)
+			 {
+				 x[id] = (int)event.getX(i);
+				 y[id] = (int)event.getY(i);
+				 
+				 if((action == MotionEvent.ACTION_DOWN)
+						 ||(action == MotionEvent.ACTION_POINTER_DOWN)
+						 ||(action == MotionEvent.ACTION_MOVE))
+				 {
+					 if(touching[id]!=true)
+					 {
+						 ToucheBegan2( x[id], y[id], tap_count, id );
+					 }
+					 else
+					 {
+						 ToucheMoved2( x[id], y[id], tap_count ,  id);
+					 }
+						 
+					 touching[id] = true;
+					 //String touchStatus = " ID: " + id + " X: " + x + " Y: " + y;
+			         //Log.d(DEBUG_TAG, touchStatus);
+				 }
+				 else
+				 {
+					 ToucheEnded2(  tap_count, id );
+					 touching[id] = false;
+				 }
+			 } 
+		 }
+
+		invalidate();	
+		return true;
+		
+	}
+	
+	/*
     public boolean onTouchEvent( MotionEvent event) 
     {
     	// The number of active touches.
@@ -162,7 +214,7 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     	}
         return true;
         
-    }
+    }*/
     /*
     public boolean onTouchEvent( final MotionEvent event )
     {
