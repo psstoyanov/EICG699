@@ -77,162 +77,120 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     // to be translated into C/C++ code
     // through the glue code in "templateApp.h
     
+    
+    // The maximum number of supported multitouch points
+    // Most current devices support up-to 10 simultaneous points
+    // Nexus 7 supports up-to 10
     final int MAX_NUMBER_OF_POINT = 20;
+    
+    // The coordinates of each touch pointer
 	float[] x = new float[MAX_NUMBER_OF_POINT];
 	float[] y = new float[MAX_NUMBER_OF_POINT];
+	
+	// Two boolean variables for each touch
+	// Upon releasing a touch (one fingers is no longer
+	// touching the screen), all touch points will
+	// be registered as released for a short time.
+	// The second boolean is used to distinguish the false
+	// positives.
 	boolean[] touching = new boolean[MAX_NUMBER_OF_POINT];
 	boolean[] false_positive = new boolean[MAX_NUMBER_OF_POINT];
-	int lastPointercounter;
 	
+
 	public boolean onTouchEvent(MotionEvent event) 
 	{
 		
 		int action = (event.getAction() & MotionEvent.ACTION_MASK);
-		
+		// Get the number of touches
 		int pointCount = event.getPointerCount();
-		
+		// Loop through all touch events
 		for (int i = 0; i < pointCount; i++) 
 		{
-			 int id = event.getPointerId(i);
+			// Get the ID number of the touch event.
+			// It is unique and does not change upon release.
+			int id = event.getPointerId(i);
 			 
-			 //Ignore pointer higher than our max.
-			 if(id < MAX_NUMBER_OF_POINT)
-			 {
-				 x[id] = (int)event.getX(i);
-				 y[id] = (int)event.getY(i);
-				 
-				 if((action == MotionEvent.ACTION_DOWN)
+			//Ignore pointer higher than our max.
+			if(id < MAX_NUMBER_OF_POINT)
+			{
+				// Set the coordinates for each touch pointer
+				x[id] = (int)event.getX(i);
+				y[id] = (int)event.getY(i);
+				
+				// If the event is one of the following:
+				// A finger is put down, more than one finger is down,
+				// a finger has moved;
+				// apply the appropriate action.
+				if((action == MotionEvent.ACTION_DOWN)
 						 ||(action == MotionEvent.ACTION_POINTER_DOWN)
 						 ||(action == MotionEvent.ACTION_MOVE))
-				 {
-					 if(touching[id]!=true&&false_positive[id]!=true)
-					 {
-						 
-						 
-						 ToucheBegan2( x[id], y[id], tap_count, id );
-					 }
-					 
-					 else
-					 {
-						 ToucheMoved2( x[id], y[id], tap_count ,  id);
-					 }
-						 
-					 touching[id] = true;
-					 false_positive[id]=true;
-					 //String touchStatus = " ID: " + id + " X: " + x + " Y: " + y;
-			         //Log.d(DEBUG_TAG, touchStatus);
-				 }
-				 else
-				 {
-					 false_positive[id]=false;
-					 if(pointCount==1)
-					 {
-						 touching[id]=false;
-						 ToucheEnded2( tap_count, id);
-					 }
-				 }
+				{
+					// Only if a pointer ID has both flags negative,
+					// the pointer will be counted as a new one.
+					// If the pointer has an active flag, but the false positive
+					// flag is false, the pointer is not new.
+					if(touching[id]!=true&&false_positive[id]!=true)
+					{
+						// Send the touch begin event (coordinates and id) to
+						// the C/C++ engine
+						ToucheBegan2( x[id], y[id], tap_count, id );
+					}
+					else
+					{
+						// Send the touch motion event (coordinates and id) to
+						// the C/C++ engine
+						ToucheMoved2( x[id], y[id], tap_count ,  id);
+					}
+					
+					// Set both flags as true.
+					touching[id] = true;
+					false_positive[id]=true;
+					
+				}
+				// In every other case (a touch has been canceled, finger has been
+				// lifted, etc.)
+				else
+				{
+					// Set the false_positive ID as true.
+					false_positive[id]=false;
+					// In case it is a single touch, there will be no false
+					// positives for releasing a finger. Set both flags as false;
+					if(pointCount==1)
+					{
+						// Since there are no false positives, send the release command
+						// to the C/C++ engine.
+						touching[id]=false;
+						ToucheEnded2( tap_count, id);
+					}
+				}
 			 } 
-		 }
+		}
+		
+		
+		// A check for false positives.
+		// Loop through the maximum supported touches.
 		for( int i=0; i < MAX_NUMBER_OF_POINT; i++)
 		{
+			// In case the pointer does not exist and the false positive
+			// flag is false, set the pointer as inactive.
+			// This way only the released fingers will be set as such.
 			if(event.findPointerIndex(i)==-1&&false_positive[i]!=true)
 			{
-				
+				// Send the release command to the C/C++ engine for the
+				// pointer ID.
 				touching[i]=false;
 				ToucheEnded2( tap_count, i);
 			}
 		}
+		
+		
+		
 		invalidate();	
 		return true;
 		
 	}
 	
-	/*
-    public boolean onTouchEvent( MotionEvent event) 
-    {
-    	// The number of active touches.
-    	
-    	
-    	int pointerCount = event.getPointerCount();
-    	for (int i = 0; i < pointerCount; i++)
-    	//if (pointerCount!=0)
-    	{
-    		// Loop through all the touch events
-    		
-    		int action = MotionEventCompat.getActionMasked(event);
-    		int actionIndex = MotionEventCompat.getActionIndex(event);
-    		int id = MotionEventCompat.getPointerId(event, actionIndex);
-    		
-    		int x = (int) event.getX(i);
-    		int y = (int) event.getY(i);    		
-    		
-    		// Pass the corresponding touch event handler
-    		// and ID to the glue code
-    		String actionString;
-    		switch (action)
-    		{
-    		
-    		
-    		
-    			case MotionEvent.ACTION_DOWN:
-    			{
-    				actionString ="DOWN";
-    				if( event.getEventTime() - last_tap < 333 ) tap_count = tap_count + 1;
-    	        	else tap_count = 1;
-
-    	        	last_tap = event.getEventTime();
-
-    	        	ToucheBegan( event.getX(0), event.getY(0), tap_count );
-    	        	
-    	        	break;
-    			}
-    				
-    			case MotionEvent.ACTION_UP:
-    			{
-    				actionString = "UP";
-    				ToucheEnded( event.getX(i), event.getY(i), tap_count );
-    				
-    				break;	
-    			}
-    			case MotionEvent.ACTION_POINTER_DOWN:
-    			{
-    				actionString = "PNTR DOWN";
-    				
-    				//ToucheBegan( event.getX(i), event.getY(i), tap_count );
-    				ToucheBegan2( event.getX(i), event.getY(i), tap_count, id );
-    				Log.d(DEBUG_TAG, "sdfaafdsa");
-    				break;
-    			}
-    			case MotionEvent.ACTION_POINTER_UP:
-    			{
-    				actionString = "PNTR UP";
-    				
-    				//ToucheEnded( event.getX(i), event.getY(i), tap_count );
-    				ToucheEnded2( event.getX(i), event.getY(i), tap_count, id );
-        			
-        			break;
-    			}
-    			case MotionEvent.ACTION_MOVE:
-    			{
-    				actionString = "MOVE";
-    				
-    				    ToucheMoved2( event.getX(i), event.getY(i), tap_count, i );
-    				    //String blah= "ID:"+ i +" X: " + x + " Y: " + y;
-    				    //Log.d(DEBUG_TAG, blah);
-    				break;
-    			}
-    			default:
-    				actionString = "";
-    		}
-    		//String touchStatus = "Action: " + actionString + " Index: " + actionIndex + " ID: " + id + " X: " + x + " Y: " + y;
-    		//Log.d(DEBUG_TAG, touchStatus);
-    		
-   
-    		
-    	}
-        return true;
-        
-    }*/
+	// The original touchEvent handler.
     /*
     public boolean onTouchEvent( final MotionEvent event )
     {

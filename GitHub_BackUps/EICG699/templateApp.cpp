@@ -36,30 +36,23 @@ as being the original software.
 
 #define FRAGMENT_SHADER ( char * )"fragment.glsl"
 
-// Used for touch handling.
 
+// Maximum number ot supported touches
+const int MAX_NUMBER_OF_POINT=20;
 
+/*
+ * Each touch pointer is assigned a touch type
+ * Type "0" - inactive, Type "1" - movement, Type "2" - view, Type "3" - extra
+ */
+int touch_type[20]={0};
+/*
+ * Is the pointer active
+ */
+bool touching[20]={false};
 
-
-	const int MAX_NUMBER_OF_POINT=20;
-	int active_pointers=0;
-	float touch_x[MAX_NUMBER_OF_POINT]={0},touch_y[MAX_NUMBER_OF_POINT]={0};
-	int touch_type[20]={0};
-	bool touching[20]={false};
-
-
-
-void active_multitouch()
-{
-	int active_touches=0;
-	for (int i=0;i<MAX_NUMBER_OF_POINT;i++)
-		{
-		if(touch_type[i]!=0)
-		active_touches++;
-		}
-	active_pointers=active_touches;
-
-}
+/*
+ * Check for pointer with a movement flag
+ */
 bool movement_touch()
 {
 	for (int i=0;i<MAX_NUMBER_OF_POINT;i++)
@@ -69,6 +62,9 @@ bool movement_touch()
 			}
 	return false;
 }
+/*
+ * Check for pointer with a view flag
+ */
 bool view_touch()
 {
 	for (int i=0;i<MAX_NUMBER_OF_POINT;i++)
@@ -467,13 +463,15 @@ void templateAppDraw( void ) {
 		
 		++i;
 	}
-	active_multitouch();
+
 
 	dynamicsworld->stepSimulation( 1.0f / 60.0f );
 
 }
 
-
+/*
+ * Original TouchBegan
+ */
 void templateAppToucheBegan( float x, float y, unsigned int tap_count )
 {
 
@@ -495,7 +493,7 @@ void templateAppToucheBegan( float x, float y, unsigned int tap_count )
 
 void templateAppToucheBegan2( float x, float y, unsigned int tap_count, unsigned int id )
 {
-	console_print("aha, false_positives");
+
 	if( x < ( screen_size * 0.5f ) )
 	{
 		if(!movement_touch())
@@ -624,7 +622,9 @@ void templateAppToucheMoved2( float x, float y, unsigned int tap_count, unsigned
 	}
 }
 
-
+/*
+ * Original TouchMoved
+ */
 void templateAppToucheMoved( float x, float y, unsigned int tap_count )
 {
 	if( x > ( ( screen_size * 0.5f ) - ( screen_size * 0.05f ) ) &&
@@ -672,7 +672,9 @@ void templateAppToucheMoved( float x, float y, unsigned int tap_count )
 	}
 }
 
-
+/*
+ * Original touchEnded
+ */
 void templateAppToucheEnded( unsigned int tap_count  )
 {
 

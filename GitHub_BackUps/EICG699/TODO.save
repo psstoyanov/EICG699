@@ -1,0 +1,45 @@
+1. Multitouch/Controller support (Keyboard optional).
+
+Multitouch support added up-to 10 fingers.
+The style is similar to the one implemented in TegraSuit.
+Small issue when a touch has been moved up.
+
+Fixed false positives when releasing a finger:
+http://developer.android.com/reference/android/view/MotionEvent.html#findPointerIndex(int)
+
+Initial commits with passing commands from Java.
+
+
+
+Controller support.
+
+
+2. Proper Gameplay/Pause/Resume lifecycle - onPause()/onResume()/
+onFocusChanged(false)
+
+Also refactor the engine to support the lifecycle states - Gameplay mode/
+Pause- the Pause state should be lifted on user action+onFocus
+
+http://android-developers.blogspot.co.uk/2011/11/
+making-android-games-that-play-nice.html
+
+Also refactor the engine to have modular Level loading- thus 
+the Main Menu will be created as a level.
+
+3. Implement Audio according to the lifecycle.
+
+If the game is in pause state, the audio must stop.
+
+4. UI+search intent.
+Pass commands from C/C++ to Java.
+
+5. Procedurally generated terrain level.
+
+
+6. OBJ to MD5 character from http://www.mixamo.com/ through Blender.
+
+7. Compelete Documentation AND proper comments inside the code.
+Internal testing - the use of actual devices simplifies the testing
+(especially in case of testing hardware features-multitouch)
+External testing - group of non-programmers, focusing on the user
+experience rather than the programming correctness 
