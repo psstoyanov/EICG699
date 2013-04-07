@@ -50,6 +50,7 @@ void ( *ToucheMoved	    )( float x, float y, unsigned int tap_count );
 void ( *ToucheMoved2    )( float x, float y, unsigned int tap_count, unsigned int id );
 void ( *ToucheEnded	    )( unsigned int tap_count );
 void ( *ToucheEnded2    )( unsigned int tap_count, unsigned int id );
+void ( *Pause           )( bool Paused);
 void ( *Accelerometer   )( float x, float y, float z );
 
 } TEMPLATEAPP;
@@ -79,6 +80,7 @@ void templateAppToucheEnded(  unsigned int tap_count );
 
 void templateAppToucheEnded2( unsigned int tap_count, unsigned int id );
 
+void Pause (bool Paused);
 
 
 void templateAppToucheCancelled( float x, float y, unsigned int tap_count );
@@ -114,6 +116,8 @@ void templateAppExit( void );
 			JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheEnded( JNIEnv *env, jobject obj,  jint tap_count );
 
 			JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheEnded2( JNIEnv *env, jobject obj, jint tap_count, jint id );
+
+			JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_Pause( JNIEnv *env, jobject obj, jboolean pause);
 
 			JNIEXPORT void JNICALL Java_com_android_templateApp_templateApp_Accelerometer( JNIEnv *env, jobject obj, jfloat x, jfloat y, jfloat z );
 		};
@@ -152,9 +156,14 @@ void templateAppExit( void );
 		JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheEnded2( JNIEnv *env, jobject obj, jint tap_count, jint id )
 		{ if( templateApp.ToucheEnded2 ) templateApp.ToucheEnded2( tap_count, id ); }
 
+		JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_Pause( JNIEnv *env, jobject obj, jboolean pause)
+		{ if( templateApp.Pause ) templateApp.Pause( pause ); }
+
 		JNIEXPORT void JNICALL Java_com_android_templateApp_templateApp_Accelerometer( JNIEnv *env, jobject obj, jfloat x, jfloat y, jfloat z )
 		{ if( templateApp.Accelerometer ) templateApp.Accelerometer( x, y, z ); }
+
 
 	#endif
 
 #endif
+

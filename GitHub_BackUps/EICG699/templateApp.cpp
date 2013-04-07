@@ -117,7 +117,8 @@ TEMPLATEAPP templateApp = { templateAppInit,
 							templateAppToucheMoved,
 							templateAppToucheMoved2,
 							templateAppToucheEnded,
-							templateAppToucheEnded2 };
+							templateAppToucheEnded2,
+							Pause};
 
 
 btSoftBodyRigidBodyCollisionConfiguration *collisionconfiguration = NULL;
@@ -131,6 +132,18 @@ btConstraintSolver *solver = NULL;
 btSoftRigidDynamicsWorld *dynamicsworld = NULL;
 
 
+void Pause(bool pause)
+{
+	if(pause)
+	{
+		console_print("paused");
+	}
+	else
+	{
+		console_print("unpaused");
+	}
+
+}
 
 void init_physic_world( void )
 {
@@ -250,7 +263,8 @@ class ClosestNotMeRayResultCallback:public btCollisionWorld::ClosestRayResultCal
 };
 
 
-void templateAppInit( int width, int height ) {
+void templateAppInit( int width, int height )
+{
 
 	screen_size = width;
 
@@ -464,6 +478,7 @@ void templateAppDraw( void ) {
 		++i;
 	}
 
+	//console_print("rendering");
 
 	dynamicsworld->stepSimulation( 1.0f / 60.0f );
 
@@ -684,6 +699,7 @@ void templateAppToucheEnded( unsigned int tap_count  )
 void templateAppToucheEnded2( unsigned int tap_count, unsigned int id )
 {
 
+
 	touch_type[id]=0;
 	if(!movement_touch())
 	{
@@ -695,6 +711,7 @@ void templateAppToucheEnded2( unsigned int tap_count, unsigned int id )
 
 
 void templateAppExit( void ) {
+	console_print("da ti eba maaaaikata");
 
 	free_physic_world();
 	
@@ -706,3 +723,4 @@ void templateAppExit( void ) {
 
 	OBJ_free( obj );
 }
+

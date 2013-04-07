@@ -1,9 +1,13 @@
 package com.android.templateApp;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.opengl.GLSurfaceView;
 import android.support.v4.view.MotionEventCompat;
 import android.util.Log;
+import android.view.ActionMode.Callback;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import com.android.chapter7_6.R;
@@ -14,6 +18,7 @@ import javax.microedition.khronos.egl.EGLContext;
 import javax.microedition.khronos.egl.EGLDisplay;
 import javax.microedition.khronos.opengles.GL10;
 
+@SuppressLint("NewApi")
 class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
 {
 	public static final String DEBUG_TAG = "MyLoggingTag";
@@ -33,6 +38,8 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
         setRenderer( r );
         
         r.apkFilePath = context.getPackageResourcePath();
+        
+        
 	}
 
     private static class ContextFactory implements GLSurfaceView.EGLContextFactory
@@ -52,7 +59,11 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
 
         public void destroyContext(EGL10 egl, EGLDisplay display, EGLContext context)
         { egl.eglDestroyContext( display, context ); }
+      
     }
+    
+   
+    
        
     //Declare native functions for multitouch
     
@@ -66,7 +77,17 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     public static native void ToucheEnded(  int tap_count );
     public static native void ToucheEnded2( int tap_count, int id );
     
-    
+    private static boolean pause=false;
+
+    public void onWindowFocusChanged(boolean hasFocus)
+    {
+    	if(hasFocus==false)
+    	{
+    		pause=true;
+    		Pause(pause);
+    		Log.d(DEBUG_TAG," focus changed to false");
+    	}
+    }
     
     private long last_tap = 0;
     
@@ -96,7 +117,8 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
 	boolean[] touching = new boolean[MAX_NUMBER_OF_POINT];
 	boolean[] false_positive = new boolean[MAX_NUMBER_OF_POINT];
 	
-
+	
+	
 	public boolean onTouchEvent(MotionEvent event) 
 	{
 		
@@ -140,6 +162,12 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
 						// Send the touch motion event (coordinates and id) to
 						// the C/C++ engine
 						ToucheMoved2( x[id], y[id], tap_count ,  id);
+						
+					}
+					if(pause)
+					{
+						pause=false;
+						Pause(pause);
 					}
 					
 					// Set both flags as true.
@@ -159,6 +187,7 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
 					{
 						// Since there are no false positives, send the release command
 						// to the C/C++ engine.
+						//startBrowser();
 						touching[id]=false;
 						ToucheEnded2( tap_count, id);
 					}
@@ -178,8 +207,11 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
 			{
 				// Send the release command to the C/C++ engine for the
 				// pointer ID.
+				
 				touching[i]=false;
 				ToucheEnded2( tap_count, i);
+				
+				
 			}
 		}
 		
@@ -189,7 +221,32 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
 		return true;
 		
 	}
+	public  void startBrowser()
+	{
+		Intent i = new Intent(Intent.ACTION_VIEW, 
+			       Uri.parse("http://almondmendoza.com/android-applications/"));
+		i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		super.getContext().startActivity(i);
+	}
 	
+	
+	/*
+	Intent intent = getActivity().getPackageManager().getLaunchIntentForPackage(com.package.address);
+	if (intent != null)
+	{
+	    // start the activity
+	    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+	    startActivity(intent);
+	}
+	else
+	{
+	    // bring user to the market
+	    // or let them choose an app?
+	    intent = new Intent(Intent.ACTION_VIEW);
+	    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+	    intent.setData(Uri.parse("market://details?id="+"com.package.address"));
+	    startActivity(intent);
+	}*/
 	// The original touchEvent handler.
     /*
     public boolean onTouchEvent( final MotionEvent event )
@@ -317,6 +374,10 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     public static native void Init( int w, int h, String apkFilePath );
      
     public static native void Draw();
+    
+    public static native void Pause(boolean Paused);
+    
+    
      
     public static class Renderer implements GLSurfaceView.Renderer
     {
@@ -324,8 +385,13 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     	public int	  width;
     	public int	  height;
     	
-    	public void onDrawFrame( GL10 gl ){ Draw(); }
-
+    	
+    	
+    	public void onDrawFrame( GL10 gl )
+    	{ 
+    		Draw();
+    	}
+    	
     	private char init_once = 0;
     	
         public void onSurfaceChanged( GL10 gl, int width, int height )
@@ -341,5 +407,6 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
         }
        
         public void onSurfaceCreated( GL10 gl, EGLConfig config ) { }
+      
     }
 }

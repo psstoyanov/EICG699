@@ -1,7 +1,10 @@
 package com.android.templateApp;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -35,13 +38,16 @@ public class templateApp extends Activity implements SensorEventListener
         
         setContentView( mView );
     }   
+   
     
-    @Override protected void onResume()
-    {
-        super.onResume();
-
-        mView.onResume();
-    }    
+    @Override
+    public void onResume() {
+    	// TODO Auto-generated method stub
+    	super.onResume();
+    	mView.onResume();
+    	Log.d("DEBUG_TAG","abe po4va ne6to da stava");
+    }
+    
 
     
 	public static native void Accelerometer( float x, float y, float z );
