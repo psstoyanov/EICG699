@@ -1,15 +1,12 @@
 package com.android.templateApp;
 
 import android.app.Activity;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import com.android.chapter7_6.R;
+import com.android.chapter9_4.R;
 
 public class templateApp extends Activity implements SensorEventListener
 {  
@@ -21,33 +18,35 @@ public class templateApp extends Activity implements SensorEventListener
     {    
     	super.onCreate( icicle );
 
-		System.loadLibrary( "openal" );
+    	System.loadLibrary( "openal" );
     	System.loadLibrary( "templateApp" );
     	
         mView = new GL2View( getApplication() );
 
         // Start the accelerometer
-        /*
+       
         mSensorManager = ( SensorManager ) getSystemService( SENSOR_SERVICE );
 
         // Refresh 24 times per second.
-        mSensorManager.registerListener( this, 
-			       						 mSensorManager.getDefaultSensor( SensorManager.SENSOR_ACCELEROMETER ), 
-			       						 41000 );
-		*/
-        
+        mSensorManager.registerListener( this, mSensorManager.getDefaultSensor( SensorManager.SENSOR_ACCELEROMETER ), 41000 );
+		
         setContentView( mView );
     }   
-   
     
-    @Override
-    public void onResume() {
-    	// TODO Auto-generated method stub
-    	super.onResume();
-    	mView.onResume();
-    	Log.d("DEBUG_TAG","abe po4va ne6to da stava");
+    @Override protected void onResume()
+    {
+        super.onResume();
+
+        mView.onResume();
+        mView.bringToFront();
     }
     
+    
+    @Override protected void onDestroy()
+    {
+    	super.onDestroy();
+    	mView.onDestroy();
+    }
 
     
 	public static native void Accelerometer( float x, float y, float z );

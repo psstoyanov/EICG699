@@ -19,16 +19,8 @@ Controller support.
 2. Proper Gameplay/Pause/Resume lifecycle - onPause()/onResume()/
 onFocusChanged(false)
 
-
-Works, properly
-
-
-
-
 Also refactor the engine to support the lifecycle states - Gameplay mode/
 Pause- the Pause state should be lifted on user action+onFocus
-
-
 
 http://android-developers.blogspot.co.uk/2011/11/
 making-android-games-that-play-nice.html
@@ -42,24 +34,13 @@ If the game is in pause state, the audio must stop.
 
 Audio stops correctly
 
-
 4. UI+search intent.
 Pass commands from C/C++ to Java.
-
-
-
 
 5. Procedurally generated terrain level.
 
 
-
-
-
 6. OBJ to MD5 character from http://www.mixamo.com/ through Blender.
-
-
-
-
 
 7. Compelete Documentation AND proper comments inside the code.
 Internal testing - the use of actual devices simplifies the testing

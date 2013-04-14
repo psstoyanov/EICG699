@@ -24,6 +24,7 @@ as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 
 */
+#include <jni.h>
 
 #ifndef TEMPLATEAPP_H
 #define TEMPLATEAPP_H
@@ -37,21 +38,19 @@ as being the original software.
 #endif
 
 
-/* The structure of the application.
- * All functions passed from Android need to be defined in the structure.
- */
+
+
 typedef struct
 {
 void ( *Init			)( int width, int height );
 void ( *Draw			)( void );
-void ( *ToucheBegan	    )( float x, float y, unsigned int tap_count );
-void ( *ToucheBegan2    )( float x, float y, unsigned int tap_count, unsigned int id );
-void ( *ToucheMoved	    )( float x, float y, unsigned int tap_count );
-void ( *ToucheMoved2    )( float x, float y, unsigned int tap_count, unsigned int id );
-void ( *ToucheEnded	    )( unsigned int tap_count );
-void ( *ToucheEnded2    )( unsigned int tap_count, unsigned int id );
+void ( *ToucheBegan     )( float x, float y, unsigned int tap_count, unsigned int id );
+void ( *ToucheMoved     )( float x, float y, unsigned int tap_count, unsigned int id );
+void ( *ToucheEnded     )( unsigned int tap_count, unsigned int id );
 void ( *Pause           )( bool Paused);
 void ( *Accelerometer   )( float x, float y, float z );
+void ( *Exit            )( void );
+bool ( *CallTheBrowser  )( void );
 
 } TEMPLATEAPP;
 
@@ -61,27 +60,13 @@ void templateAppInit( int width, int height );
 
 void templateAppDraw( void );
 
-//The following code is used for gluing the Dalvik-Java and C/C++
-//commands commands together.
+void templateAppToucheBegan( float x, float y, unsigned int tap_count, unsigned int id );
 
-void templateAppToucheBegan( float x, float y, unsigned int tap_count );
+void templateAppToucheMoved( float x, float y, unsigned int tap_count, unsigned int id );
 
-void templateAppToucheBegan2( float x, float y, unsigned int tap_count, unsigned int id );
-
-
-
-void templateAppToucheMoved( float x, float y, unsigned int tap_count );
-
-void templateAppToucheMoved2( float x, float y, unsigned int tap_count, unsigned int id );
-
-
-
-void templateAppToucheEnded(  unsigned int tap_count );
-
-void templateAppToucheEnded2( unsigned int tap_count, unsigned int id );
+void templateAppToucheEnded( unsigned int tap_count, unsigned int id );
 
 void Pause (bool Paused);
-
 
 void templateAppToucheCancelled( float x, float y, unsigned int tap_count );
 
@@ -89,44 +74,33 @@ void templateAppAccelerometer( float x, float y, float z );
 
 void templateAppExit( void );
 
+bool templateAppCallTheBrowser( void );
 
-//In case the application is made for iOS devices.
 	#ifndef __IPHONE_4_0
 
-        //The difference in compilers requires extern "C" code
-        //for compatibility.
 		extern "C"
 		{
-		//The actual gluing code
-		//Every command is exported from Java to C/C++
-		//This includes the initialization, drawing commands and so forth.
-		//Commands for input (multitouch/controller support) is added here.
 			JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_Init( JNIEnv *env, jobject obj, jint width, jint height, jstring apkFilePath );
 
 			JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_Draw( JNIEnv *env, jobject obj );
 
-			JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheBegan( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count );
+			JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheBegan( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count, jint id );
 
-			JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheBegan2( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count, jint id );
+			JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheMoved( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count, jint id );
 
-			JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheMoved( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count );
-
-			JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheMoved2( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count, jint id );
-
-			JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheEnded( JNIEnv *env, jobject obj,  jint tap_count );
-
-			JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheEnded2( JNIEnv *env, jobject obj, jint tap_count, jint id );
+			JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheEnded( JNIEnv *env, jobject obj, jint tap_count, jint id );
 
 			JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_Pause( JNIEnv *env, jobject obj, jboolean pause);
 
 			JNIEXPORT void JNICALL Java_com_android_templateApp_templateApp_Accelerometer( JNIEnv *env, jobject obj, jfloat x, jfloat y, jfloat z );
+
+			JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_Exit( JNIEnv *env, jobject obj );
+
+			JNIEXPORT bool JNICALL Java_com_android_templateApp_GL2View_CallTheBrowser( JNIEnv *env,jobject obj);
+
+
 		};
 
-
-		//Since the check for iOS devices returns negative
-		//the following commands will be executed instead.
-		//Hence the same gluing function has to be glued.
-		//Gluing the initialization function.
 		JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_Init( JNIEnv *env, jobject obj, jint width, jint height, jstring apkFilePath )
 		{
 			setenv( "FILESYSTEM", env->GetStringUTFChars( apkFilePath, NULL ), 1 );
@@ -134,33 +108,34 @@ void templateAppExit( void );
 			if( templateApp.Init ) templateApp.Init( width, height );
 		}
 
-
 		JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_Draw( JNIEnv *env, jobject obj )
 		{ if( templateApp.Draw ) templateApp.Draw(); }
 
-		JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheBegan( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count )
-		{ if( templateApp.ToucheBegan ) templateApp.ToucheBegan( x, y, tap_count ); }
+		JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheBegan( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count, jint id )
+		{ if( templateApp.ToucheBegan ) templateApp.ToucheBegan( x, y, tap_count, id ); }
 
-		JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheBegan2( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count, jint id )
-		{ if( templateApp.ToucheBegan2 ) templateApp.ToucheBegan2( x, y, tap_count, id ); }
+		JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheMoved( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count, jint id )
+		{ if( templateApp.ToucheMoved ) templateApp.ToucheMoved( x, y, tap_count, id ); }
 
-		JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheMoved( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count )
-		{ if( templateApp.ToucheMoved ) templateApp.ToucheMoved( x, y, tap_count ); }
-
-		JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheMoved2( JNIEnv *env, jobject obj, jfloat x, jfloat y, jint tap_count, jint id )
-		{ if( templateApp.ToucheMoved2 ) templateApp.ToucheMoved2( x, y, tap_count, id ); }
-
-		JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheEnded( JNIEnv *env, jobject obj,  jint tap_count )
-		{ if( templateApp.ToucheEnded ) templateApp.ToucheEnded(  tap_count ); }
-
-		JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheEnded2( JNIEnv *env, jobject obj, jint tap_count, jint id )
-		{ if( templateApp.ToucheEnded2 ) templateApp.ToucheEnded2( tap_count, id ); }
+		JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_ToucheEnded( JNIEnv *env, jobject obj, jint tap_count, jint id )
+		{ if( templateApp.ToucheEnded ) templateApp.ToucheEnded(  tap_count, id ); }
 
 		JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_Pause( JNIEnv *env, jobject obj, jboolean pause)
-		{ if( templateApp.Pause ) templateApp.Pause( pause ); }
+				{ if( templateApp.Pause ) templateApp.Pause( pause ); }
 
 		JNIEXPORT void JNICALL Java_com_android_templateApp_templateApp_Accelerometer( JNIEnv *env, jobject obj, jfloat x, jfloat y, jfloat z )
 		{ if( templateApp.Accelerometer ) templateApp.Accelerometer( x, y, z ); }
+
+		JNIEXPORT void JNICALL Java_com_android_templateApp_GL2View_Exit( JNIEnv *env, jobject obj )
+				{ if( templateApp.Exit ) templateApp.Exit(); }
+
+		JNIEXPORT bool JNICALL Java_com_android_templateApp_GL2View_CallTheBrowser( JNIEnv *pJNIenv,jobject obj)
+		{
+			     if( templateApp.CallTheBrowser ) return templateApp.CallTheBrowser();
+
+		}
+
+
 
 
 	#endif

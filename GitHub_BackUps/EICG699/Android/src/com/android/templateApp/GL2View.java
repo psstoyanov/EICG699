@@ -5,12 +5,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.opengl.GLSurfaceView;
-import android.support.v4.view.MotionEventCompat;
 import android.util.Log;
-import android.view.ActionMode.Callback;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
-import com.android.chapter7_6.R;
+import com.android.chapter9_4.R;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
@@ -21,6 +19,7 @@ import javax.microedition.khronos.opengles.GL10;
 @SuppressLint("NewApi")
 class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
 {
+	
 	public static final String DEBUG_TAG = "MyLoggingTag";
 	public Renderer r;
 	
@@ -38,8 +37,6 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
         setRenderer( r );
         
         r.apkFilePath = context.getPackageResourcePath();
-        
-        
 	}
 
     private static class ContextFactory implements GLSurfaceView.EGLContextFactory
@@ -56,29 +53,27 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     												   attrib_list );
     		return context;
         }
-
+    	
         public void destroyContext(EGL10 egl, EGLDisplay display, EGLContext context)
         { egl.eglDestroyContext( display, context ); }
-      
     }
     
-   
     
        
-    //Declare native functions for multitouch
-    
-    public static native void ToucheBegan( float x, float y, int tap_count );
-    public static native void ToucheBegan2( float x, float y, int tap_count, int id );
+    public static native void ToucheBegan( float x, float y, int tap_count, int id );
 
-    public static native void ToucheMoved( float x, float y, int tap_count );
-    public static native void ToucheMoved2( float x, float y, int tap_count , int id);
+    public static native void ToucheMoved( float x, float y, int tap_count, int id );
     
+    public static native void ToucheEnded( int tap_count, int id );
+    public static native void Pause(boolean Paused);
     
-    public static native void ToucheEnded(  int tap_count );
-    public static native void ToucheEnded2( int tap_count, int id );
+    private long last_tap = 0;
+    
+    private int tap_count = 1;
     
     private static boolean pause=false;
-
+    
+    
     public void onWindowFocusChanged(boolean hasFocus)
     {
     	if(hasFocus==false)
@@ -89,11 +84,8 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     	}
     }
     
-    private long last_tap = 0;
     
-    private int tap_count = 1;
-    
-    // Handling multitouch events
+ // Handling multitouch events
     // Passing the ID and action from Android
     // to be translated into C/C++ code
     // through the glue code in "templateApp.h
@@ -102,7 +94,7 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     // The maximum number of supported multitouch points
     // Most current devices support up-to 10 simultaneous points
     // Nexus 7 supports up-to 10
-    final int MAX_NUMBER_OF_POINT = 20;
+    final int MAX_NUMBER_OF_POINT = 2;
     
     // The coordinates of each touch pointer
 	float[] x = new float[MAX_NUMBER_OF_POINT];
@@ -147,6 +139,7 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
 						 ||(action == MotionEvent.ACTION_POINTER_DOWN)
 						 ||(action == MotionEvent.ACTION_MOVE))
 				{
+					
 					// Only if a pointer ID has both flags negative,
 					// the pointer will be counted as a new one.
 					// If the pointer has an active flag, but the false positive
@@ -155,15 +148,24 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
 					{
 						// Send the touch begin event (coordinates and id) to
 						// the C/C++ engine
-						ToucheBegan2( x[id], y[id], tap_count, id );
+						ToucheBegan( x[id], y[id], tap_count, id );
+						boolean browsercalled=CallTheBrowser();
+						if(browsercalled)
+						{
+							OpenBrowser();
+						}
 					}
 					else
 					{
 						// Send the touch motion event (coordinates and id) to
 						// the C/C++ engine
-						ToucheMoved2( x[id], y[id], tap_count ,  id);
+						ToucheMoved( x[id], y[id], tap_count ,  id);
 						
 					}
+					
+					//After pausing the application
+					//the first user interaction with the application will
+					//resume the later.
 					if(pause)
 					{
 						pause=false;
@@ -189,7 +191,7 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
 						// to the C/C++ engine.
 						//startBrowser();
 						touching[id]=false;
-						ToucheEnded2( tap_count, id);
+						ToucheEnded( tap_count, id);
 					}
 				}
 			 } 
@@ -209,7 +211,7 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
 				// pointer ID.
 				
 				touching[i]=false;
-				ToucheEnded2( tap_count, i);
+				ToucheEnded( tap_count, i);
 				
 				
 			}
@@ -221,66 +223,11 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
 		return true;
 		
 	}
-	public  void startBrowser()
-	{
-		Intent i = new Intent(Intent.ACTION_VIEW, 
-			       Uri.parse("http://almondmendoza.com/android-applications/"));
-		i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		super.getContext().startActivity(i);
-	}
 	
 	
-	/*
-	Intent intent = getActivity().getPackageManager().getLaunchIntentForPackage(com.package.address);
-	if (intent != null)
-	{
-	    // start the activity
-	    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-	    startActivity(intent);
-	}
-	else
-	{
-	    // bring user to the market
-	    // or let them choose an app?
-	    intent = new Intent(Intent.ACTION_VIEW);
-	    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-	    intent.setData(Uri.parse("market://details?id="+"com.package.address"));
-	    startActivity(intent);
-	}*/
-	// The original touchEvent handler.
-    /*
-    public boolean onTouchEvent( final MotionEvent event )
-    {
-        switch( event.getAction() )
-        {
-	        case MotionEvent.ACTION_DOWN:
-	        {
-	        	if( event.getEventTime() - last_tap < 333 ) tap_count = tap_count + 1;
-	        	else tap_count = 1;
-
-	        	last_tap = event.getEventTime();
-
-	        	ToucheBegan( event.getX(0), event.getY(0), tap_count );
-	        	break;
-	        }
-	        
-	        case MotionEvent.ACTION_MOVE:
-	        {
-	        	ToucheMoved( event.getX(0), event.getY(0), tap_count );
-	        	break;
-	        }
-	        
-	        case MotionEvent.ACTION_UP:
-	        {
-	        	ToucheEnded( event.getX(0), event.getY(0), tap_count );
-	        	break;
-	        }
-        }
-
-        return true;
-    } */
    
-    private static class ConfigChooser implements GLSurfaceView.EGLConfigChooser {
+    private static class ConfigChooser implements GLSurfaceView.EGLConfigChooser 
+    {
 
         protected int mRedSize,
         			  mGreenSize,
@@ -375,8 +322,18 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
      
     public static native void Draw();
     
-    public static native void Pause(boolean Paused);
+    public static native boolean CallTheBrowser();
     
+    
+	
+	private void OpenBrowser()
+	{
+		Intent i = new Intent(Intent.ACTION_VIEW, 
+			       Uri.parse("http://almondmendoza.com/android-applications/"));
+		i.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+		i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		super.getContext().startActivity(i);
+	}
     
      
     public static class Renderer implements GLSurfaceView.Renderer
@@ -385,13 +342,8 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
     	public int	  width;
     	public int	  height;
     	
-    	
-    	
-    	public void onDrawFrame( GL10 gl )
-    	{ 
-    		Draw();
-    	}
-    	
+    	public void onDrawFrame( GL10 gl ){ Draw(); }
+
     	private char init_once = 0;
     	
         public void onSurfaceChanged( GL10 gl, int width, int height )
@@ -407,6 +359,13 @@ class GL2View extends GLSurfaceView implements SurfaceHolder.Callback
         }
        
         public void onSurfaceCreated( GL10 gl, EGLConfig config ) { }
-      
     }
+    
+    public static native void Exit();
+	public void onDestroy()
+	{
+		// TODO Auto-generated method stub
+		Exit();
+		
+	}
 }
