@@ -50,7 +50,7 @@ bool touching[2]={false};
 /*
  * Check for pointer with a movement flag
  */
-bool movement_touch()
+bool turn_left()
 {
 	for (int i=0;i<MAX_NUMBER_OF_POINT;i++)
 			{
@@ -62,7 +62,7 @@ bool movement_touch()
 /*
  * Check for pointer with a view flag
  */
-bool view_touch()
+bool turn_right()
 {
 	for (int i=0;i<MAX_NUMBER_OF_POINT;i++)
 			{
@@ -71,33 +71,39 @@ bool view_touch()
 			}
 	return false;
 }
-
-/*
- *
- */
-
-OBJ *obj = NULL;
 /*
  * added for multitouch camera controls
  */
-float screen_size;
-
+float screen_width,screen_height;
+/*
 vec2 view_location,
  	 view_delta = { 0.0f, 0.0f };
 
 vec3 move_location = { 0.0f, 0.0f, 0.0f },
 	 move_delta;
-
+*/
 vec3 eye,
      up = { 0.0f, 0.0f, 1.0f };
 
 vec3 next_eye;
 
-float roty		= -165.0f,
+
+float roty		= -135.0f,
       next_roty = roty,
       rotz		= 0.0f,
       next_rotz	= rotz,
-      distance	= -5.0f;
+      distance	= -3.0f;
+
+/*
+ *  Change to "racing type game"
+ */
+
+float maximum_speed = 9.0f;
+float player_speed = 0.0f;
+
+
+OBJ *obj = NULL;
+
 
 
 OBJMESH *player = NULL;
@@ -308,7 +314,8 @@ void program_draw( void *ptr )
 }
 
 
-class ClosestNotMeRayResultCallback:public btCollisionWorld::ClosestRayResultCallback { 
+class ClosestNotMeRayResultCallback:public btCollisionWorld::ClosestRayResultCallback
+{
 
 	public:
 		ClosestNotMeRayResultCallback( btRigidBody *rb,
@@ -335,7 +342,8 @@ bool contact_added_callback( btManifoldPoint &btmanifoldpoint,
 							 const btCollisionObject *btcollisionobject0,
 							 int part_0, int index_0,
 							 const btCollisionObject *btcollisionobject1,
-							 int part_1, int index_1 ) {
+							 int part_1, int index_1 )
+{
 
 	OBJMESH *objmesh0 = ( OBJMESH * )( ( btRigidBody * )btcollisionobject0 )->getUserPointer();
 
@@ -477,8 +485,9 @@ void load_level( void )
 	
 	player = OBJ_get_mesh( obj, "player", 0 );
 	
-	player->btrigidbody->setFriction( 10.0f );
+	player->btrigidbody->setFriction( 6.7f );
 	
+
 	memcpy( &eye, &player->location, sizeof( vec3 ) );
 	
 	
@@ -707,8 +716,8 @@ void free_level( void )
 
 void templateAppInit( int width, int height ) {
 
-	screen_size = width;
-
+	screen_width = width;
+	screen_height = height;
 
 
 	atexit( templateAppExit );
@@ -754,7 +763,48 @@ void templateAppDraw( void ) {
 	GFX_load_identity();
 
 
+	if(turn_left())
+		{
+			next_rotz+=1.2;
 
+		}
+	if(turn_right())
+
+	{
+	         next_rotz-=1.2;
+	}
+
+	vec3 forward = { 0.0f, 1.0f, 0.0f },direction;
+
+	if( !game_state )
+	{
+		//Pre-calculate a few variables before rotating the forward vector by the camera's Z rotation.
+		float r = rotz * DEG_TO_RAD, c = cosf( r ), s = sinf( r );
+
+		//Rotate the forward vector and store the result into the direction variable. Because
+		//both vectors are already normalized, there's no need to re-normalize them one more time.
+
+		direction.x = c * forward.y - s * forward.x;
+		direction.y = s * forward.y + c * forward.x;
+
+
+		//Calculate the current angular velocity that is relevant to the
+		//accelerometer value that we are using as the force factor.
+		//Then clamp the result to make sure that the speed is between the minimum and
+		//maximum ball speed thresholds.
+		float speed = CLAMP(   -maximum_speed,
+		                       -maximum_speed,
+								maximum_speed );
+
+
+
+			player->btrigidbody->setAngularVelocity( btVector3( direction.x * speed,direction.y * speed,0.0f ) );
+
+
+			//Activate the rigid body to make sure that the angular velocity will be applied.
+			player->btrigidbody->setActivationState( ACTIVE_TAG );
+		}
+	/*
 	if( view_delta.x || view_delta.y )
 	{
 
@@ -782,15 +832,15 @@ void templateAppDraw( void ) {
 		direction.x =  s * move_delta.y + c * move_delta.x;
 		direction.y =  c * move_delta.y - s * move_delta.x;
 
-		player->btrigidbody->setAngularVelocity( 2*btVector3(  -direction.y * ( move_delta.z * 6.7f ),
-															 -direction.x * ( move_delta.z * 6.7f ),
+		player->btrigidbody->setAngularVelocity( 2*btVector3( -direction.y * ( move_delta.z * 6.7f ),
+															  -direction.x * ( move_delta.z * 6.7f ),
 															  0.0f ) );
 
 
 		player->btrigidbody->setActivationState( ACTIVE_TAG );
-	}
+	}*/
 
-		//console_print("player_x: %3.f player_y: %3.f\n",player->location.x,player->location.y);
+	//console_print("player_x: %3.f player_y: %3.f\n",player->location.x,player->location.y);
 
 	next_eye.x = player->location.x +
 					 distance *
@@ -804,15 +854,15 @@ void templateAppDraw( void ) {
 
 
 	next_eye.z = player->location.z +
-					 distance *
-					 sinf( roty * DEG_TO_RAD );
+					       distance *
+					      sinf( roty * DEG_TO_RAD );
 		
 
-	btVector3 p1( player->location.x,
+	btVector3 p1(   player->location.x,
 					 player->location.y,
 					 player->location.z ),
 
-			 p2( next_eye.x,
+			     p2( next_eye.x,
 					 next_eye.y,
 					 next_eye.z );
 
@@ -820,8 +870,8 @@ void templateAppDraw( void ) {
 											   p1,
 											   p2 );
 	dynamicsworld->rayTest( p1,
-							   p2,
-							   back_ray );
+							p2,
+							back_ray );
 
 	if( back_ray.hasHit() )
 	{
@@ -837,6 +887,7 @@ void templateAppDraw( void ) {
 		next_eye.z =   back_ray.m_hitPointWorld.z() +
 					   ( back_ray.m_hitNormalWorld.z()* 0.1f );
 	}
+
 
 
 	roty = roty * 0.9f + next_roty * 0.1f;
@@ -942,9 +993,31 @@ void templateAppDraw( void ) {
 
 	char gem_str  [ MAX_CHAR ] = {""},
 		 time_str [ MAX_CHAR ] = {""},
-		 level_str[ MAX_CHAR ] = {""};
+		 level_str[ MAX_CHAR ] = {""},
+		 pause_str [ MAX_CHAR ] = {""};
 
-	if( !game_state )
+	if( game_state == 3 )
+	{
+		sprintf( pause_str, "Touch to Resume" );
+
+				FONT_print( font_big,
+							viewport_matrix[ 2 ] * 0.5f - FONT_length( font_big, pause_str ) * 0.5f + 4.0f,
+							viewport_matrix[ 3 ] * 0.7f - font_big->font_size * 1.5f - 4.0f,
+							pause_str,
+							&font_color );
+
+				/* Yellow. */
+				font_color.x = 1.0f;
+				font_color.y = 1.0f;
+				font_color.z = 0.0f;
+
+				FONT_print( font_big,
+							viewport_matrix[ 2 ] * 0.5f - FONT_length( font_big, pause_str ) * 0.5f,
+							viewport_matrix[ 3 ] * 0.7f - font_big->font_size * 1.5f,
+							pause_str,
+							&font_color );
+	}
+	if( game_state == 1 )
 	{
 	
 		sprintf( level_str, "Level Clear!" );
@@ -1003,11 +1076,71 @@ void templateAppDraw( void ) {
 				time_str,
 				&font_color );
 
+
 	if( !game_state ) game_time += SOUND_get_time( background_sound );
 
 }
 
+void templateAppToucheBegan( float x, float y, unsigned int tap_count, unsigned int id )
+{
+	    openBrowser=false;
+		if( game_state == 1 && tap_count >= 2 ) game_state = 2;
 
+
+		if( x < ( screen_width * 0.5f ) )
+		{
+			if(y>screen_height*0.2)
+			{
+			if(!turn_left()&&!game_state)
+					{
+						touch_type[id]=1;
+						console_print("move_change");
+					}
+			}
+
+
+		}
+		else
+			{
+			if(y>screen_height*0.2)
+			{
+			if(!turn_right()&&!game_state)
+					{
+						touch_type[id]=2;
+						console_print("view_change");
+					}
+			}
+
+
+			}
+
+
+}
+void templateAppToucheMoved( float x, float y, unsigned int tap_count, unsigned int id )
+{
+	if( x > ( ( screen_width * 0.5f ) - ( screen_width * 0.05f ) ) &&
+			x < ( ( screen_width * 0.5f ) + ( screen_width * 0.05f ) ) )
+		{
+
+		}
+	    else if( x < ( screen_width * 0.5f ) )
+	    {
+
+	    }
+	    else
+	    	{
+
+
+	    	}
+
+}
+void templateAppToucheEnded( unsigned int tap_count, unsigned int id )
+{
+	touch_type[id]=0;
+
+}
+
+/*
 void templateAppToucheBegan( float x, float y, unsigned int tap_count, unsigned int id )
 {
 	openBrowser=false;
@@ -1037,7 +1170,8 @@ void templateAppToucheBegan( float x, float y, unsigned int tap_count, unsigned 
 			view_location.y = y;
 		}
 	}
-}
+}*/
+/*
 void templateAppToucheMoved( float x, float y, unsigned int tap_count, unsigned int id )
 {
 
@@ -1046,7 +1180,7 @@ void templateAppToucheMoved( float x, float y, unsigned int tap_count, unsigned 
 	 * located at the center of the screen. This way, if the user is on one side
 	 * of the screen and swipes all the way to the other side, you can then stop
 	 * the movement.
-	 */
+
 
 	if( x > ( ( screen_size * 0.5f ) - ( screen_size * 0.05f ) ) &&
 		x < ( ( screen_size * 0.5f ) + ( screen_size * 0.05f ) ) )
@@ -1054,7 +1188,7 @@ void templateAppToucheMoved( float x, float y, unsigned int tap_count, unsigned 
 
 		/* Stop the current movement for the view or if the camera is
 		 * on the move
-		 */
+
 		move_delta.z =
 		view_delta.x =
 		view_delta.y = 0.0f;
@@ -1063,7 +1197,7 @@ void templateAppToucheMoved( float x, float y, unsigned int tap_count, unsigned 
 		 * location of the touch to be either the starting point of the view or the
 		 * movement, since you never now in which direction the user will move the
 		 * touch.
-		 */
+
 		if(touch_type[id]==1)
 		{
 
@@ -1080,8 +1214,8 @@ void templateAppToucheMoved( float x, float y, unsigned int tap_count, unsigned 
 	}
 
 	/* If the touch start is on the left side of the screen, deal with it
-	 * as a camera movement.
-	 */
+	 * as a player movement.
+
 	else if( x < ( screen_size * 0.5f ) )
 	{
 		if(touch_type[id]==1)
@@ -1089,21 +1223,21 @@ void templateAppToucheMoved( float x, float y, unsigned int tap_count, unsigned 
 			//console_print("move touch");
 
 			/* Store the current touch as a 3D vector.
-			 */
+
 			vec3 touche = { x,
 					        y,
 					        0.0f };
 
 			/* Calculate the delta to determine which direction the touch is
 			 * going.
-			*/
+
 			vec3_diff( &move_delta,
 					   &move_location,
 					   &touche );
 
 			/* Normalize the delta to have a direction vector in the range of
 			 * -1 to 1.
-			 */
+
 			vec3_normalize( &move_delta,
 					        &move_delta );
 
@@ -1112,8 +1246,8 @@ void templateAppToucheMoved( float x, float y, unsigned int tap_count, unsigned 
 			 * in pixels. This way, the closer to the starting point, the slower the
 			 * movement will be, and as the touch distance increases, the movement speed
 			 * will increase up to its maximum.
-			 */
-			move_delta.z = CLAMP( vec3_dist( &move_location, &touche ) / 128.0f,
+
+			 move_delta.z = CLAMP( vec3_dist( &move_location, &touche ) / 128.0f,
 																		   0.0f,
 																		   1.0f );
 		}
@@ -1122,14 +1256,14 @@ void templateAppToucheMoved( float x, float y, unsigned int tap_count, unsigned 
 	/* Since the touch is on the right side of the screen, simply calculate
 	 * the delta for the view so you can then use it to manipulate the X and Z
 	 * rotation of the camera.
-	 */
+
 	else
 	{
 		if(touch_type[id]==2)
 		{
 			/* Calculate the view delta and linearly interpolate the values to
 			 * smooth things out a bit.
-			 */
+
 
 
 			//console_print("view touch");
@@ -1138,12 +1272,15 @@ void templateAppToucheMoved( float x, float y, unsigned int tap_count, unsigned 
 
 			/* Remember the current location as the starting point for the next
 			 * movement (if any).
-			*/
+
 			view_location.x = x;
 			view_location.y = y;
 		}
 	}
-}
+}*/
+
+
+/*
 void templateAppToucheEnded( unsigned int tap_count, unsigned int id )
 {
 
@@ -1154,7 +1291,7 @@ void templateAppToucheEnded( unsigned int tap_count, unsigned int id )
 		move_delta.y =
 		move_delta.z = 0.0f;
 	}
-}
+}*/
 
 
 void Pause(bool pause)
